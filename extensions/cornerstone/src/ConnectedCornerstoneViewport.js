@@ -2,7 +2,6 @@ import CornerstoneViewport from 'react-cornerstone-viewport';
 import OHIF from '@ohif/core';
 import { connect } from 'react-redux';
 import throttle from 'lodash.throttle';
-import { setEnabledElement } from './state';
 
 const { setViewportActive, setViewportSpecificData } = OHIF.redux.actions;
 const {
@@ -81,11 +80,11 @@ const mapDispatchToProps = (dispatch, ownProps) => {
      */
     onElementEnabled: event => {
       const enabledElement = event.detail.element;
-      setEnabledElement(viewportIndex, enabledElement);
       dispatch(
         setViewportSpecificData(viewportIndex, {
           // TODO: Hack to make sure our plugin info is available from the outset
           plugin: 'cornerstone',
+          dom: enabledElement,
         })
       );
     },

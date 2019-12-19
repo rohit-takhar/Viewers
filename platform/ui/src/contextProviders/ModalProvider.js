@@ -13,28 +13,14 @@ const { Provider } = ModalContext;
 
 export const useModal = () => useContext(ModalContext);
 
-/**
- * UI Modal
- *
- * @typedef {Object} ModalProps
- * @property {ReactElement|HTMLElement} [content=null] Modal content.
- * @property {Object} [contentProps=null] Modal content props.
- * @property {boolean} [shouldCloseOnEsc=false] Modal is dismissible via the esc key.
- * @property {boolean} [isOpen=true] Make the Modal visible or hidden.
- * @property {boolean} [closeButton=true] Should the modal body render the close button.
- * @property {string} [title=null] Should the modal render the title independently of the body content.
- * @property {string} [customClassName=null] The custom class to style the modal.
- */
-
 const ModalProvider = ({ children, modal: Modal, service }) => {
   const DEFAULT_OPTIONS = {
-    content: null,
-    contentProps: null,
-    shouldCloseOnEsc: false,
-    isOpen: true,
-    closeButton: true,
-    title: null,
-    customClassName: '',
+    component: null /* The component instance inside the modal. */,
+    shouldCloseOnEsc: false /* Modal is dismissible via the esc key. */,
+    isOpen: true /* Make the Modal visible or hidden. */,
+    closeButton: true /* Should the modal body render the close button. */,
+    title: null /* Should the modal render the title independently of the body content. */,
+    customClassName: '' /* The custom class to style the modal. */,
   };
 
   const [options, setOptions] = useState(DEFAULT_OPTIONS);
@@ -53,12 +39,13 @@ const ModalProvider = ({ children, modal: Modal, service }) => {
   /**
    * Show the modal and override its configuration props.
    *
-   * @param {ModalProps} props { content, contentProps, shouldCloseOnEsc, isOpen, closeButton, title, customClassName }
    * @returns void
    */
-  const show = useCallback(props => setOptions({ ...options, ...props }), [
-    options,
-  ]);
+  const show = useCallback(
+    (component, props = {}) =>
+      setOptions(Object.assign({}, options, props, { component })),
+    [options]
+  );
 
   /**
    * Hide the modal and set its properties to default.
@@ -69,45 +56,28 @@ const ModalProvider = ({ children, modal: Modal, service }) => {
     DEFAULT_OPTIONS,
   ]);
 
-  const {
-    content: ModalContent,
-    contentProps,
-    isOpen,
-    title,
-    customClassName,
-    shouldCloseOnEsc,
-    closeButton,
-  } = options;
+  const { component: Component } = options;
 
   return (
     <Provider value={{ show, hide }}>
-      {ModalContent && (
+      {options.component && (
         <Modal
-          className={classNames(customClassName, ModalContent.className)}
-          shouldCloseOnEsc={shouldCloseOnEsc}
-          isOpen={isOpen}
-          title={title}
-          closeButton={closeButton}
+          className={classNames(
+            options.customClassName,
+            options.component.className
+          )}
+          shouldCloseOnEsc={options.keyboard}
+          isOpen={options.isOpen}
+          title={options.title}
+          closeButton={options.closeButton}
           onClose={hide}
         >
-          <ModalContent {...contentProps} show={show} hide={hide} />
+          <Component {...options} show={show} hide={hide} />
         </Modal>
       )}
       {children}
     </Provider>
   );
-};
-
-/**
- * Higher Order Component to use the modal methods through a Class Component.
- *
- * @returns
- */
-export const withModal = Component => {
-  return function WrappedComponent(props) {
-    const { show, hide } = useModal();
-    return <Component {...props} modal={{ show, hide }} />;
-  };
 };
 
 ModalProvider.defaultProps = {
@@ -127,6 +97,18 @@ ModalProvider.propTypes = {
   service: PropTypes.shape({
     setServiceImplementation: PropTypes.func,
   }),
+};
+
+/**
+ * Higher Order Component to use the modal methods through a Class Component.
+ *
+ * @returns
+ */
+export const withModal = Component => {
+  return function WrappedComponent(props) {
+    const { show, hide } = useModal();
+    return <Component {...props} modal={{ show, hide }} />;
+  };
 };
 
 export default ModalProvider;

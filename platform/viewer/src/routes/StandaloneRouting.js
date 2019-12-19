@@ -26,10 +26,12 @@ class StandaloneRouting extends Component {
   static parseQueryAndFetchStudies(query) {
     return new Promise((resolve, reject) => {
       const url = query.url;
-
+      log.info(url);
+      log.info('--------------------------------------');
       if (!url) {
         return reject(new Error('No URL was specified. Use ?url=$yourURL'));
       }
+      log.info('++++++++++++++++++++++++++++++++++++++');
 
       // Define a request to the server to retrieve the study data
       // as JSON, given a URL that was in the Route

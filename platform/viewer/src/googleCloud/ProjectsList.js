@@ -50,31 +50,21 @@ class ProjectsList extends Component {
   }
 
   render() {
-    const { loading, projects, filter, error } = this.props;
-
-    if (error) {
-      return <p>{error}</p>;
+    if (this.props.error) {
+      return <p>{this.props.error}</p>;
     }
 
     const loadingIcon = (
       <Icon name="circle-notch" className="loading-icon-spin loading-icon" />
     );
 
-    if (loading) {
+    if (this.props.loading) {
       return loadingIcon;
     }
 
-    const lowerCaseFilter = filter.toLowerCase();
-    const filteredProjects = projects.filter(project =>   
-      typeof project.name  === 'string' &&
-      (filter === "" || project.name.toLowerCase().includes(lowerCaseFilter))
-    );
-
     const body = (
       <tbody id="ProjectList">
-        {
-          filteredProjects.map(this.renderTableRow)
-        }
+        {this.props.projects.map(this.renderTableRow)}
       </tbody>
     );
 
@@ -86,7 +76,7 @@ class ProjectsList extends Component {
             <th>{this.props.t('ID')}</th>
           </tr>
         </thead>
-        {projects && body}
+        {this.props.projects && body}
       </table>
     );
   }

@@ -51,7 +51,6 @@ const replaceParam = (path = '', paramKey, paramValue) => {
   if (paramValue) {
     return path.replace(paramPattern, paramValue);
   }
-
   return path;
 };
 

@@ -57,24 +57,46 @@ class RoundedButtonGroup extends Component {
       const optionText = option.label && <span>{option.label}</span>;
       const iconProps =
         typeof option.icon === 'string' ? { name: option.icon } : option.icon;
+		var text_ = '';
+		if(option.bottomLabel === 'Measurements') {
 
+      text_ = '   AI Panel';
       const bottomLabel = option.bottomLabel && (
-        <div className="bottomLabel">{option.bottomLabel}</div>
+        <div className="bottomLabel">{text_}</div>
       );
 
       return (
         <div
           key={index}
-          className={className}
+          className={"measurement_panel"}
           onClick={() => this.onClickOption(option.value)}
         >
           <div className="roundedButton">
             {optionText}
-            {iconProps && <Icon {...iconProps} />}
+			{bottomLabel}
           </div>
-          {bottomLabel}
         </div>
       );
+    }
+		else{
+      text_ = option.bottomLabel;
+      const bottomLabel = option.bottomLabel && (
+        <div className="bottomLabel">{text_}</div>
+      );
+
+      return (
+        <div
+          key={index}
+          onClick={() => this.onClickOption(option.value)}
+        >
+          <div className="roundedButton" style={{width:"100%"}}>
+            {optionText}
+            <span><img src="http://192.168.25.5/img/series.png" alt=""/></span> <span style={{float: "right"}}><img src="http://192.168.25.5/img/leftsidearrow.png" alt=""/></span><br/>
+          </div>
+
+        </div>
+      );
+    }
     });
 
     return <div className={className}>{buttons}</div>;

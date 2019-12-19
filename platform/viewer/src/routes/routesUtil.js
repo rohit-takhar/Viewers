@@ -32,15 +32,15 @@ const reload = () => window.location.reload();
 const ROUTES_DEF = {
   default: {
     viewer: {
-      path: '/viewer/:studyInstanceUids',
+      path: '/viewer',
       component: ViewerRouting,
     },
     standaloneViewer: {
-      path: '/viewer',
-      component: StandaloneRouting,
+      path: '/viewer/?StudyIuid=:studyInstanceUids',
+      component: ViewerRouting,
     },
     list: {
-      path: ['/studylist', '/'],
+      path: ['/studylist'],
       component: StudyListRouting,
       condition: appConfig => {
         return appConfig.showStudyList !== undefined
@@ -83,17 +83,17 @@ const ROUTES_DEF = {
 
 const getRoutes = appConfig => {
   const routes = [];
+  OHIF.log.info(appConfig);
   for (let keyConfig in ROUTES_DEF) {
     const routesConfig = ROUTES_DEF[keyConfig];
-
     for (let routeKey in routesConfig) {
       const route = routesConfig[routeKey];
       const validRoute =
         typeof route.condition === 'function'
           ? route.condition(appConfig)
           : true;
-
       if (validRoute) {
+        OHIF.log.info(routes);
         routes.push({
           path: route.path,
           Component: route.component,
@@ -101,7 +101,7 @@ const getRoutes = appConfig => {
       }
     }
   }
-
+  OHIF.log.info(routes);
   return routes;
 };
 

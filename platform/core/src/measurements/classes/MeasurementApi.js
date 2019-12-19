@@ -7,33 +7,16 @@ import getImageIdForImagePath from '../lib/getImageIdForImagePath';
 import guid from '../../utils/guid';
 import studyMetadataManager from '../../utils/studyMetadataManager';
 import { measurementApiDefaultConfig } from './../configuration.js';
-
+import axios from 'axios';
+const rootURL = 'http://192.168.25.5:3002';
 
 const configuration = {
-  ...measurementApiDefaultConfig
+  ...measurementApiDefaultConfig,
 };
 
 export default class MeasurementApi {
   static Instance;
 
-  /**
-   * Set configuration: It should merge default configuration with any new one
-   *
-   * @static
-   * @param {Object} config
-   * @param {Object} config.server
-   * @param {string} config.server.type - The server type
-   * @param {string} config.server.wadoRoot - The server wado URL root
-   * @param {Array} config.measurementTools
-   * @param {string} config.measurementTools[].id - The tool group id
-   * @param {string} config.measurementTools[].name - The tool group name
-   * @param {Array} config.measurementTools[].childTools - The child tool's configuration
-   * @param {Object} config.dataExchange
-   * @param {Function} config.dataExchange.store - Function that store measurement data
-   * @param {Function} config.dataExchange.retrieve - Function that retrieves measurement data
-   *
-   * @memberof MeasurementApi
-   */
   static setConfiguration(config) {
     Object.assign(configuration, config);
   }
@@ -221,16 +204,67 @@ export default class MeasurementApi {
     this.options.onMeasurementsUpdated(Object.assign({}, this.tools));
   }
 
+  static discTableData = null;
+
+  static vertebraTableData = null;
   retrieveMeasurements(patientId, timepointIds) {
     const retrievalFn = configuration.dataExchange.retrieve;
-    const { server } = configuration;
+    const { server } = this.options;
+	console.log(server);
     if (typeof retrievalFn !== 'function') {
       log.error('Measurement retrieval function has not been configured.');
       return;
     }
 
     return new Promise((resolve, reject) => {
-      retrievalFn(server).then(measurementData => {
+      // this.retrieveAnnotationOnDb().then(data => {
+      //   log.info(JSON.parse(data["data"])[0]["data"]);
+      // });
+      this.retrieveAnnotationOnDb(patientId).then(data => {
+        //retrievalFn({ patientId, timepointIds, server }).then(measurementData => {
+        try {
+          MeasurementApi.recordData = JSON.parse(data['data']['sql'])['report'];
+          //MeasurementApi.recordData = null;
+          var studyIns = JSON.parse(data['data']['sid'])['sid'];
+          console.log(studyIns);
+		  var sids = ['1.2.826.0.1.3680043.8.760.0.90658439.1504019243423.1172','1.2.826.0.1.3680043.8.760.0.90658439.1504048983998.33527','1.2.826.0.1.3680043.8.760.0.90658439.1504059318200.26104','1.2.826.0.1.3680043.8.760.0.90658439.1504053572748.59700','1.2.826.0.1.3680043.8.760.0.90658439.1504060611075.29539','1.2.826.0.1.3680043.8.760.0.90658439.1504021630969.14937','1.2.826.0.1.3680043.8.760.0.90658439.1504063198837.35385','1.2.826.0.1.3680043.8.760.0.90658439.1504069720267.9179','1.2.826.0.1.3680043.8.760.0.90658439.1504074894746.7169'];
+		  var sids_spine = ['1.2.840.113619.6.408.101587071086188360264746653352487082487','1.2.840.113619.6.408.110789076595778374038541877892469356155', '1.2.840.113619.6.408.115381277085858796291933005575760093396', '1.2.840.113619.6.408.120565987212998121434885271380971841184','1.2.840.113619.6.408.123316631867117291620885561680152508535'];
+			
+		  var img_ids = ["Case198.jpg","Case201.jpg","Case202.jpg","Case205.jpg","Case206.jpg"];
+		  var sids_lung = ['1.3.6.1.4.1.25403.345051303375.3120.20181206085533.1','1.3.6.1.4.1.25403.345051303375.3120.20181225042450.1','1.3.6.1.4.1.25403.345051303375.3120.20181225073255.3','1.3.6.1.4.1.25403.345051303375.3120.20181225082319.1','1.3.6.1.4.1.25403.345051303375.3120.20181225122329.1','1.3.6.1.4.1.25403.345051303375.3120.20181226034818.1','1.3.6.1.4.1.25403.345051303375.3120.20181226055112.3','1.3.6.1.4.1.25403.345051303375.5932.20190105034124.3','1.3.6.1.4.1.25403.345051303375.5932.20190107111835.1','1.3.6.1.4.1.25403.345051303375.5932.20190108041103.1'];
+          var all_spine_data = {'1.2.840.113619.6.408.101587071086188360264746653352487082487': {'disc_height_table': [{'disc_level': 'T10-T11', 'sc_diameter': '- (-)', 'disc_height': '- (-)', 'listhesis': '- (-)', 'comments': ''}, {'disc_level': 'T11-T12', 'sc_diameter': '- (-)', 'disc_height': '7.15mm (Mild)', 'listhesis': '6.0mm (Normal)', 'comments': ''}, {'disc_level': 'T12-L1', 'sc_diameter': '20.76mm (Patent)', 'disc_height': '8.93mm (Normal)', 'listhesis': '3.82mm (Normal)', 'comments': ''}, {'disc_level': 'L1-L2', 'sc_diameter': '20.49mm (Patent)', 'disc_height': '10.3mm (Normal)', 'listhesis': '10.26mm (Normal)', 'comments': ''}, {'disc_level': 'L2-L3', 'sc_diameter': '21.27mm (Patent)', 'disc_height': '12.18mm (Normal)', 'listhesis': '15.44mm (Normal)', 'comments': ''}, {'disc_level': 'L3-L4', 'sc_diameter': '19.95mm (Patent)', 'disc_height': '13.78mm (Normal)', 'listhesis': '8.78mm (Normal)', 'comments': ''}, {'disc_level': 'L4-L5', 'sc_diameter': '16.8mm (Patent)', 'disc_height': '12.63mm (Normal)', 'listhesis': '13.42mm (Normal)', 'comments': ''}, {'disc_level': 'L5-S1', 'sc_diameter': '17.58mm (Patent)', 'disc_height': '14.93mm (Normal)', 'listhesis': '17.75mm (Normal)', 'comments': ''}], 'vert_height_table': [{'level': 'T10', 'anterior_height': '-', 'middle_height': '-', 'posterior_height': '-', 'status': '-'}, {'level': 'T11', 'anterior_height': '18.92', 'middle_height': '19.62', 'posterior_height': '21.91', 'status': 'Normal'}, {'level': 'T12', 'anterior_height': '20.56', 'middle_height': '21.08', 'posterior_height': '23.19', 'status': 'Normal'}, {'level': 'L1', 'anterior_height': '25.33', 'middle_height': '23.97', 'posterior_height': '25.38', 'status': 'Normal'}, {'level': 'L2', 'anterior_height': '26.85', 'middle_height': '23.42', 'posterior_height': '25.62', 'status': 'Normal'}, {'level': 'L3', 'anterior_height': '28.37', 'middle_height': '23.26', 'posterior_height': '25.12', 'status': 'Normal'}, {'level': 'L4', 'anterior_height': '25.01', 'middle_height': '22.48', 'posterior_height': '25.03', 'status': 'Normal'}, {'level': 'L5', 'anterior_height': '26.0', 'middle_height': '20.77', 'posterior_height': '21.58', 'status': 'Normal'}, {'level': 'S1', 'anterior_height': '31.04', 'middle_height': '23.71', 'posterior_height': '23.53', 'status': 'Normal'}]}, '1.2.840.113619.6.408.110789076595778374038541877892469356155': {'disc_height_table': [{'disc_level': 'T10-T11', 'sc_diameter': '- (-)', 'disc_height': '7.5mm (Normal)', 'listhesis': '2.31mm (Normal)', 'comments': ''}, {'disc_level': 'T11-T12', 'sc_diameter': '15.74mm (Patent)', 'disc_height': '8.75mm (Normal)', 'listhesis': '10.56mm (Normal)', 'comments': ''}, {'disc_level': 'T12-L1', 'sc_diameter': '15.74mm (Patent)', 'disc_height': '9.38mm (Normal)', 'listhesis': '5.44mm (Normal)', 'comments': ''}, {'disc_level': 'L1-L2', 'sc_diameter': '22.54mm (Patent)', 'disc_height': '9.29mm (Normal)', 'listhesis': '7.04mm (Normal)', 'comments': ''}, {'disc_level': 'L2-L3', 'sc_diameter': '15.74mm (Patent)', 'disc_height': '10.57mm (Normal)', 'listhesis': '9.88mm (Normal)', 'comments': ''}, {'disc_level': 'L3-L4', 'sc_diameter': '16.76mm (Patent)', 'disc_height': '8.62mm (Normal)', 'listhesis': '12.28mm (Normal)', 'comments': ''}, {'disc_level': 'L4-L5', 'sc_diameter': '- (-)', 'disc_height': '7.87mm (Normal)', 'listhesis': '9.56mm (Normal)', 'comments': ''}, {'disc_level': 'L5-S1', 'sc_diameter': '- (-)', 'disc_height': '8.76mm (Normal)', 'listhesis': '6.97mm (Normal)', 'comments': ''}], 'vert_height_table': [{'level': 'T10', 'anterior_height': '18.76', 'middle_height': '15.66', 'posterior_height': '19.54', 'status': 'Normal'}, {'level': 'T11', 'anterior_height': '21.29', 'middle_height': '16.24', 'posterior_height': '20.66', 'status': 'Normal'}, {'level': 'T12', 'anterior_height': '20.01', 'middle_height': '18.75', 'posterior_height': '21.29', 'status': 'Normal'}, {'level': 'L1', 'anterior_height': '20.62', 'middle_height': '17.58', 'posterior_height': '20.04', 'status': 'Normal'}, {'level': 'L2', 'anterior_height': '21.33', 'middle_height': '20.0', 'posterior_height': '22.64', 'status': 'Normal'}, {'level': 'L3', 'anterior_height': '21.91', 'middle_height': '19.98', 'posterior_height': '23.13', 'status': 'Normal'}, {'level': 'L4', 'anterior_height': '21.48', 'middle_height': '19.4', 'posterior_height': '21.4', 'status': 'Normal'}, {'level': 'L5', 'anterior_height': '24.66', 'middle_height': '17.78', 'posterior_height': '20.66', 'status': 'Normal'}, {'level': 'S1', 'anterior_height': '26.84', 'middle_height': '20.55', 'posterior_height': '20.78', 'status': 'Normal'}]}, '1.2.840.113619.6.408.115381277085858796291933005575760093396': {'disc_height_table': [{'disc_level': 'T10-T11', 'sc_diameter': '- (-)', 'disc_height': '- (-)', 'listhesis': '- (-)', 'comments': ''}, {'disc_level': 'T11-T12', 'sc_diameter': '- (-)', 'disc_height': '8.18mm (Normal)', 'listhesis': '6.98mm (Normal)', 'comments': ''}, {'disc_level': 'T12-L1', 'sc_diameter': '- (-)', 'disc_height': '10.0mm (Normal)', 'listhesis': '6.05mm (Normal)', 'comments': ''}, {'disc_level': 'L1-L2', 'sc_diameter': '19.92mm (Patent)', 'disc_height': '9.51mm (Normal)', 'listhesis': '8.1mm (Normal)', 'comments': ''}, {'disc_level': 'L2-L3', 'sc_diameter': '19.14mm (Patent)', 'disc_height': '10.61mm (Normal)', 'listhesis': '4.89mm (Normal)', 'comments': ''}, {'disc_level': 'L3-L4', 'sc_diameter': '17.58mm (Patent)', 'disc_height': '12.45mm (Normal)', 'listhesis': '11.44mm (Normal)', 'comments': ''}, {'disc_level': 'L4-L5', 'sc_diameter': '18.36mm (Patent)', 'disc_height': '12.78mm (Normal)', 'listhesis': '12.72mm (Normal)', 'comments': ''}, {'disc_level': 'L5-S1', 'sc_diameter': '12.89mm (Patent)', 'disc_height': '10.23mm (Normal)', 'listhesis': '21.72mm (Grade I RL)', 'comments': ''}], 'vert_height_table': [{'level': 'T10', 'anterior_height': '-', 'middle_height': '-', 'posterior_height': '-', 'status': '-'}, {'level': 'T11', 'anterior_height': '20.66', 'middle_height': '19.39', 'posterior_height': '22.51', 'status': 'Normal'}, {'level': 'T12', 'anterior_height': '23.12', 'middle_height': '20', 'posterior_height': '23.13', 'status': 'Normal'}, {'level': 'L1', 'anterior_height': '23.16', 'middle_height': '22.66', 'posterior_height': '25.69', 'status': 'Normal'}, {'level': 'L2', 'anterior_height': '23.88', 'middle_height': '24.3', 'posterior_height': '27.61', 'status': 'Normal'}, {'level': 'L3', 'anterior_height': '25.5', 'middle_height': '22.46', 'posterior_height': '25.5', 'status': 'Normal'}, {'level': 'L4', 'anterior_height': '26.9', 'middle_height': '21.91', 'posterior_height': '25.03', 'status': 'Normal'}, {'level': 'L5', 'anterior_height': '27.14', 'middle_height': '22.77', 'posterior_height': '23.26', 'status': 'Normal'}, {'level': 'S1', 'anterior_height': '31.31', 'middle_height': '27.07', 'posterior_height': '25.65', 'status': 'Normal'}]}, '1.2.840.113619.6.408.120565987212998121434885271380971841184': {'disc_height_table': [{'disc_level': 'T10-T11', 'sc_diameter': '- (-)', 'disc_height': '- (-)', 'listhesis': '- (-)', 'comments': ''}, {'disc_level': 'T11-T12', 'sc_diameter': '- (-)', 'disc_height': '- (-)', 'listhesis': '- (-)', 'comments': ''}, {'disc_level': 'T12-L1', 'sc_diameter': '- (-)', 'disc_height': '9.97mm (Normal)', 'listhesis': '6.26mm (Normal)', 'comments': ''}, {'disc_level': 'L1-L2', 'sc_diameter': '19.14mm (Patent)', 'disc_height': '10.7mm (Normal)', 'listhesis': '9.45mm (Normal)', 'comments': ''}, {'disc_level': 'L2-L3', 'sc_diameter': '19.92mm (Patent)', 'disc_height': '13.02mm (Normal)', 'listhesis': '12mm (Normal)', 'comments': ''}, {'disc_level': 'L3-L4', 'sc_diameter': '19.14mm (Patent)', 'disc_height': '14.41mm (Normal)', 'listhesis': '3.92mm (Normal)', 'comments': ''}, {'disc_level': 'L4-L5', 'sc_diameter': '16.8mm (Patent)', 'disc_height': '13.63mm (Normal)', 'listhesis': '11.53mm (Normal)', 'comments': ''}, {'disc_level': 'L5-S1', 'sc_diameter': '19.14mm (Patent)', 'disc_height': '12.89mm (Normal)', 'listhesis': '15.64mm (Normal)', 'comments': ''}], 'vert_height_table': [{'level': 'T10', 'anterior_height': '-', 'middle_height': '-', 'posterior_height': '-', 'status': '-'}, {'level': 'T11', 'anterior_height': '-', 'middle_height': '-', 'posterior_height': '-', 'status': '-'}, {'level': 'T12', 'anterior_height': '21.29', 'middle_height': '19.27', 'posterior_height': '23.78', 'status': 'Normal'}, {'level': 'L1', 'anterior_height': '21.26', 'middle_height': '20.81', 'posterior_height': '23.13', 'status': 'Normal'}, {'level': 'L2', 'anterior_height': '25.03', 'middle_height': '21.12', 'posterior_height': '24.41', 'status': 'Normal'}, {'level': 'L3', 'anterior_height': '23.26', 'middle_height': '20.63', 'posterior_height': '25.69', 'status': 'Normal'}, {'level': 'L4', 'anterior_height': '25.66', 'middle_height': '19.96', 'posterior_height': '25.03', 'status': 'Normal'}, {'level': 'L5', 'anterior_height': '26.52', 'middle_height': '19.38', 'posterior_height': '21.91', 'status': 'Normal'}, {'level': 'S1', 'anterior_height': '29.69', 'middle_height': '22.46', 'posterior_height': '22.65', 'status': 'Normal'}]}, '1.2.840.113619.6.408.123316631867117291620885561680152508535': {'disc_height_table': [{'disc_level': 'T10-T11', 'sc_diameter': '- (-)', 'disc_height': '7.63mm (Normal)', 'listhesis': '11.2mm (Normal)', 'comments': ''}, {'disc_level': 'T11-T12', 'sc_diameter': '- (-)', 'disc_height': '8.77mm (Normal)', 'listhesis': '3.27mm (Normal)', 'comments': ''}, {'disc_level': 'T12-L1', 'sc_diameter': '- (-)', 'disc_height': '8.99mm (Normal)', 'listhesis': '5.13mm (Normal)', 'comments': ''}, {'disc_level': 'L1-L2', 'sc_diameter': '19.92mm (Patent)', 'disc_height': '10.84mm (Normal)', 'listhesis': '7.03mm (Normal)', 'comments': ''}, {'disc_level': 'L2-L3', 'sc_diameter': '16.8mm (Patent)', 'disc_height': '13.32mm (Normal)', 'listhesis': '8.06mm (Normal)', 'comments': ''}, {'disc_level': 'L3-L4', 'sc_diameter': '22.3mm (Patent)', 'disc_height': '14.73mm (Normal)', 'listhesis': '15.41mm (Normal)', 'comments': ''}, {'disc_level': 'L4-L5', 'sc_diameter': '- (-)', 'disc_height': '8.02mm (Mild)', 'listhesis': '19.31mm (Grade I RL)', 'comments': ''}, {'disc_level': 'L5-S1', 'sc_diameter': '- (-)', 'disc_height': '8.1mm (Mild)', 'listhesis': '3.85mm (Normal)', 'comments': ''}], 'vert_height_table': [{'level': 'T10', 'anterior_height': '20.01', 'middle_height': '19.38', 'posterior_height': '22.51', 'status': 'Normal'}, {'level': 'T11', 'anterior_height': '23.34', 'middle_height': '20.06', 'posterior_height': '23.82', 'status': 'Normal'}, {'level': 'T12', 'anterior_height': '23.54', 'middle_height': '22.09', 'posterior_height': '24.57', 'status': 'Normal'}, {'level': 'L1', 'anterior_height': '23.34', 'middle_height': '22.53', 'posterior_height': '25.81', 'status': 'Normal'}, {'level': 'L2', 'anterior_height': '24.41', 'middle_height': '22.95', 'posterior_height': '24.41', 'status': 'Normal'}, {'level': 'L3', 'anterior_height': '23.16', 'middle_height': '20.01', 'posterior_height': '25.19', 'status': 'Normal'}, {'level': 'L4', 'anterior_height': '25.38', 'middle_height': '19.41', 'posterior_height': '20.96', 'status': 'Normal'}, {'level': 'L5', 'anterior_height': '27.46', 'middle_height': '21.72', 'posterior_height': '22.38', 'status': 'Normal'}, {'level': 'S1', 'anterior_height': '29.48', 'middle_height': '24.63', 'posterior_height': '21.21', 'status': 'Normal'}]}};
+
+			  if(sids_lung.indexOf(studyIns) > -1)
+			  {
+				MeasurementApi.show_lung = 'block';
+				MeasurementApi.url_ = 'http://192.168.25.5:8889/LUNG/report/' + studyIns;
+			  }
+			  else if(sids.indexOf(studyIns) > -1)
+		  {
+			  MeasurementApi.show = 'block';
+		  }
+		  
+		  
+          if(sids_spine.indexOf(studyIns) > -1)
+          {
+			  MeasurementApi.recordData = null;
+			  MeasurementApi.imageURL = 'http://192.168.25.5:8000/spine_jpg_folder/' + img_ids[sids_spine.indexOf(studyIns)];
+            MeasurementApi.discTableData = all_spine_data[studyIns]["disc_height_table"];
+            MeasurementApi.vertebraTableData = all_spine_data[studyIns]["vert_height_table"];
+          }
+          log.info(JSON.parse(data['data']['data']));
+          log.info(JSON.parse(data['data']['sql']));
+          var measurementData = {
+            Freehand: JSON.parse(JSON.parse(data['data']['data'])[0]['data'])[
+              'allTools'
+            ],
+            Length: [],
+            Bidirectional: [],
+          };
+        } catch {
+          measurementData = null;
+        }
+		
         if (measurementData) {
           log.info('Measurement data retrieval');
           log.info(measurementData);
@@ -261,8 +295,72 @@ export default class MeasurementApi {
     });
   }
 
+  async retrieveAnnotationOnDb(patientId) {
+    const url = rootURL + '/retrieve';
+    try {
+      const result = await axios.get(url, {
+        params: { patient_id: patientId },
+      });
+      return result;
+    } catch (err) {
+      log.info(err);
+    }
+  }
+
+  static imageURL =
+    'http://192.168.25.5:8000/spine_jpg_folder/Case205.jpg';
+
+  static setImageURL(URL) {
+    MeasurementApi.imageURL = URL;
+  }
+
+  static getVertebraTableData() {
+    return MeasurementApi.vertebraTableData;
+  }
+
+  static setVertebraTableData(vertebraTableData) {
+    console.log('Please set vertebra table data here');
+    MeasurementApi.vertebraTableData = vertebraTableData;
+  }
+  static getDiscTableData() {
+    return MeasurementApi.discTableData;
+  }
+
+  static setDiscTableData(discData) {
+    console.log('Please set disc table data here');
+    MeasurementApi.discTableData = discData;
+  }
+
+  //Please update this recorData variable from you api call
+  static recordData = null;
+  static url_ = null;
+  static show = 'none';
+  static show_lung = 'none';
+
+  static getUpdatedRecordData() {
+    console.log(
+      'Set your record textarea data is available at this location. Thank you.'
+    );
+   return MeasurementApi.recordData;
+   // return null;
+  }
+
+  static setUpdatedRecordData(recordData) {
+    MeasurementApi.recordData = recordData;
+  }
+
+  static onRecordDataRejected() {
+    console.log(
+      'Rejected your record textarea data is available at this location. Thank you.'
+    );
+  }
+
   storeMeasurements(timepointId) {
-    const { server } = configuration;
+    console.log(
+      'Store your record textarea data is available at this location. Thank you.'
+    );
+    console.log(MeasurementApi.recordData);
+    const { server } = this.options;
     const storeFn = configuration.dataExchange.store;
     if (typeof storeFn !== 'function') {
       log.error('Measurement store function has not been configured.');
@@ -302,14 +400,29 @@ export default class MeasurementApi {
       patientId,
       timepointIds,
     };
-
+    log.info(measurementData);
+    log.info(filter);
     log.info('Saving Measurements for timepoints:', timepoints);
-    return storeFn(measurementData, filter, server).then(result => {
-      log.info('Measurement storage completed');
-      return result;
+    var obj = {
+      data: JSON.stringify(measurementData),
+      report: MeasurementApi.recordData,
+    };
+    return this.updateAnnotationOnDb(obj).then(res => {
+      log.info(res);
     });
+    /*  return storeFn(measurementData, filter, server).then(() => {
+        log.info('Measurement storage completed');
+      });*/
   }
-
+  async updateAnnotationOnDb(update) {
+    const url = rootURL + '/update';
+    try {
+      const result = await axios.post(url, { data: update });
+      return result.data;
+    } catch (err) {
+      log.info(err);
+    }
+  }
   calculateLesionNamingNumber(measurements) {
     const sortedMeasurements = measurements.sort((a, b) => {
       if (a.lesionNamingNumber > b.lesionNamingNumber) {
@@ -788,7 +901,7 @@ export default class MeasurementApi {
     }
 
     let addedMeasurement;
-
+    log.info(measurement);
     // Upsert the measurement in collection
     const toolIndex = collection.findIndex(
       tool => tool._id === measurement._id
@@ -832,9 +945,14 @@ export default class MeasurementApi {
     if (toolIndex < 0) {
       return;
     }
-
+	
     collection[toolIndex] = Object.assign({}, measurement);
-
+	try{
+		MeasurementApi.url_ = "http://192.168.25.102/rsna-full/uidquery/" + measurement["sopInstanceUid"] + "/" + Math.floor(measurement["handles"]["end"]["x"]) + "-" + Math.floor(measurement["handles"]["end"]["y"]) + "-" + Math.floor(measurement["handles"]["start"]["x"]) + "-" + Math.floor(measurement["handles"]["start"]["y"]);
+	}
+	catch{
+		MeasurementApi.url_ = null;
+	}
     // Let others know that the measurements are updated
     this.onMeasurementsUpdated();
 

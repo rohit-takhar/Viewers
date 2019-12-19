@@ -86,6 +86,18 @@ function getDefaultButtonData() {
       icon: 'square-o',
     },
     {
+      id: 'freehandRoi',
+      title: 'Freehand ROI',
+      className: 'imageViewerTool',
+      icon: 'edit',
+    },
+    {
+      id: 'freehandRoiSculptor',
+      title: 'Freehand ROI',
+      className: 'imageViewerTool',
+      icon: 'inline-edit',
+    },
+    {
       id: 'resetViewport',
       title: 'Reset Viewport',
       className: 'imageViewerCommand',

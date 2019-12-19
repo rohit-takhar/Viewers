@@ -46,23 +46,21 @@ class LocationsList extends Component {
   }
 
   render() {
-    const { loading, locations, filter, error } = this.props;
-
-    if (error) {
-      return <p>{error}</p>;
+    if (this.props.error) {
+      return <p>{this.props.error}</p>;
     }
 
     const loadingIcon = (
       <Icon name="circle-notch" className="loading-icon-spin loading-icon" />
     );
 
-    if (loading) {
+    if (this.props.loading) {
       return loadingIcon;
     }
 
     const body = (
       <tbody id="LocationList">
-        {locations.filter(location => (location.name.split('/')[3].toLowerCase().includes(filter.toLowerCase()) || filter=="")).map(this.renderTableRow)}
+        {this.props.locations.map(this.renderTableRow)}
       </tbody>
     );
 
@@ -73,7 +71,7 @@ class LocationsList extends Component {
             <th>{this.props.t('Location')}</th>
           </tr>
         </thead>
-        {locations && body}
+        {this.props.locations && body}
       </table>
     );
   }

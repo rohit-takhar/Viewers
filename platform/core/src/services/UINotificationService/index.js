@@ -10,19 +10,21 @@
  * @property {boolean} [autoClose=true]
  */
 
-const name = 'UINotificationService';
-
-const publicAPI = {
-  name,
-  hide: _hide,
-  show: _show,
+const uiNotificationServicePublicAPI = {
+  name: 'UINotificationService',
+  hide,
+  show,
   setServiceImplementation,
 };
 
-const serviceImplementation = {
+const uiNotificationServiceImplementation = {
   _hide: () => console.warn('hide() NOT IMPLEMENTED'),
   _show: () => console.warn('show() NOT IMPLEMENTED'),
 };
+
+function createUINotificationService() {
+  return uiNotificationServicePublicAPI;
+}
 
 /**
  * Create and show a new UI notification; returns the
@@ -31,7 +33,7 @@ const serviceImplementation = {
  * @param {Notification} notification { title, message, duration, position, type, autoClose}
  * @returns {number} id
  */
-function _show({
+function show({
   title,
   message,
   duration = 5000,
@@ -39,7 +41,7 @@ function _show({
   type = 'info',
   autoClose = true,
 }) {
-  return serviceImplementation._show({
+  return uiNotificationServiceImplementation._show({
     title,
     message,
     duration,
@@ -55,8 +57,8 @@ function _show({
  * @param {number} id - id of the notification to hide/dismiss
  * @returns undefined
  */
-function _hide(id) {
-  return serviceImplementation._hide({ id });
+function hide(id) {
+  return uiNotificationServiceImplementation._hide({ id });
 }
 
 /**
@@ -72,16 +74,11 @@ function setServiceImplementation({
   show: showImplementation,
 }) {
   if (hideImplementation) {
-    serviceImplementation._hide = hideImplementation;
+    uiNotificationServiceImplementation._hide = hideImplementation;
   }
   if (showImplementation) {
-    serviceImplementation._show = showImplementation;
+    uiNotificationServiceImplementation._show = showImplementation;
   }
 }
 
-export default {
-  name,
-  create: ({ configuration = {} }) => {
-    return publicAPI;
-  },
-};
+export default createUINotificationService;

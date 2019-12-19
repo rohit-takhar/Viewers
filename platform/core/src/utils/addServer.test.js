@@ -5,9 +5,9 @@ describe('addServers', () => {
     dicomWeb: [
       {
         name: 'DCM4CHEE',
-        wadoUriRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/wado',
-        qidoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
-        wadoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
+        wadoUriRoot: 'http://192.168.25.5:8042//dicom-web/',
+        qidoRoot: 'http://192.168.25.5:8042//dicom-web/',
+        wadoRoot: 'http://192.168.25.5:8042//dicom-web/',
         qidoSupportsIncludeField: true,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',
@@ -47,12 +47,12 @@ describe('addServers', () => {
       server: {
         imageRendering: 'wadors',
         name: 'DCM4CHEE',
-        qidoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
+        qidoRoot: 'http://192.168.25.5:8042//dicom-web/',
         qidoSupportsIncludeField: true,
         thumbnailRendering: 'wadors',
         type: 'dicomWeb',
-        wadoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
-        wadoUriRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/wado',
+        wadoRoot: 'http://192.168.25.5:8042//dicom-web/',
+        wadoUriRoot: 'http://192.168.25.5:8042//dicom-web/',
       },
       type: 'ADD_SERVER',
     });

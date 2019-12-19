@@ -1,96 +1,72 @@
-import React, { Component } from 'react';
-import { OidcProvider } from 'redux-oidc';
-import { I18nextProvider } from 'react-i18next';
-import PropTypes from 'prop-types';
-import { Provider } from 'react-redux';
-import { BrowserRouter as Router } from 'react-router-dom';
 import { hot } from 'react-hot-loader/root';
-
-import OHIFCornerstoneExtension from '@ohif/extension-cornerstone';
-
-import {
-  SnackbarProvider,
-  ModalProvider,
-  DialogProvider,
-  OHIFModal,
-} from '@ohif/ui';
-
-import {
-  CommandsManager,
-  ExtensionManager,
-  ServicesManager,
-  HotkeysManager,
-  UINotificationService,
-  UIModalService,
-  UIDialogService,
-  utils,
-  redux as reduxOHIF,
-} from '@ohif/core';
-
-import i18n from '@ohif/i18n';
 
 // TODO: This should not be here
 import './config';
 
-/** Utils */
+import {
+  CommandsManager,
+  ExtensionManager,
+  HotkeysManager,
+  utils,
+} from '@ohif/core';
+import React, { Component } from 'react';
 import {
   getUserManagerForOpenIdConnectClient,
   initWebWorkers,
 } from './utils/index.js';
 
-/** Extensions */
+import { I18nextProvider } from 'react-i18next';
+
+// ~~ EXTENSIONS
 import { GenericViewerCommands, MeasurementsPanel } from './appExtensions';
-
-/** Viewer */
+import OHIFCornerstoneExtension from '@ohif/extension-cornerstone';
 import OHIFStandaloneViewer from './OHIFStandaloneViewer';
-
-/** Store */
+import { OidcProvider } from 'redux-oidc';
+import PropTypes from 'prop-types';
+import { Provider } from 'react-redux';
+import { BrowserRouter as Router } from 'react-router-dom';
 import { getActiveContexts } from './store/layout/selectors.js';
+import i18n from '@ohif/i18n';
 import store from './store';
+import { SnackbarProvider, ModalProvider, OHIFModal } from '@ohif/ui';
 
-/** Contexts */
+// Contexts
 import WhiteLabellingContext from './context/WhiteLabellingContext';
 import UserManagerContext from './context/UserManagerContext';
 import AppContext from './context/AppContext';
-const { setUserPreferences } = reduxOHIF.actions;
 
-/** ~~~~~~~~~~~~~ Application Setup */
+// ~~~~ APP SETUP
 const commandsManagerConfig = {
   getAppState: () => store.getState(),
   getActiveContexts: () => getActiveContexts(store.getState()),
 };
 
-/** Managers */
 const commandsManager = new CommandsManager(commandsManagerConfig);
 const hotkeysManager = new HotkeysManager(commandsManager);
-const servicesManager = new ServicesManager();
-let extensionManager;
-/** ~~~~~~~~~~~~~ End Application Setup */
+const extensionManager = new ExtensionManager({ commandsManager });
+// ~~~~ END APP SETUP
 
 // TODO[react] Use a provider when the whole tree is React
 window.store = store;
 
 class App extends Component {
   static propTypes = {
-    config: PropTypes.oneOfType([
-      PropTypes.func,
+    routerBasename: PropTypes.string.isRequired,
+    servers: PropTypes.object.isRequired,
+    //
+    oidc: PropTypes.array,
+    whiteLabelling: PropTypes.object,
+    extensions: PropTypes.arrayOf(
       PropTypes.shape({
-        routerBasename: PropTypes.string.isRequired,
-        oidc: PropTypes.array,
-        whiteLabelling: PropTypes.object,
-        extensions: PropTypes.array,
-      }),
-    ]).isRequired,
-    defaultExtensions: PropTypes.array,
+        id: PropTypes.string.isRequired,
+      })
+    ),
   };
 
   static defaultProps = {
-    config: {
-      whiteLabelling: {},
-      oidc: [],
-      extensions: [],
-    },
-    defaultExtensions: [],
+    whiteLabelling: {},
+    oidc: [],
+    extensions: [],
   };
 
   _appConfig;
@@ -99,73 +75,35 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    const { config, defaultExtensions } = props;
-
-    const appDefaultConfig = {
-      cornerstoneExtensionConfig: {},
-      extensions: [],
-      routerBasename: '/',
-      whiteLabelling: {},
-    };
-
-    this._appConfig = {
-      ...appDefaultConfig,
-      ...(typeof config === 'function' ? config({ servicesManager }) : config),
-    };
-
-    const {
-      servers,
-      hotkeys,
-      cornerstoneExtensionConfig,
-      extensions,
-      oidc,
-    } = this._appConfig;
+    this._appConfig = props;
+    const { servers, extensions, hotkeys, oidc } = props;
 
     this.initUserManager(oidc);
-    _initServices([UINotificationService, UIModalService, UIDialogService]);
-    _initExtensions(
-      [...defaultExtensions, ...extensions],
-      cornerstoneExtensionConfig,
-      this._appConfig
-    );
-
-    /*
-     * Must run after extension commands are registered
-     * if there is no hotkeys from localStorage set up from config.
-     */
-    _initHotkeys(hotkeys);
+    _initExtensions(extensions, hotkeys);
     _initServers(servers);
     initWebWorkers();
   }
 
   render() {
-    const { whiteLabelling, routerBasename } = this._appConfig;
-    const {
-      UINotificationService,
-      UIDialogService,
-      UIModalService,
-    } = servicesManager.services;
+    const { whiteLabelling, routerBasename } = this.props;
+    const userManager = this._userManager;
+    const config = {
+      appConfig: this._appConfig,
+    };
 
-    if (this._userManager) {
+    if (userManager) {
       return (
-        <AppContext.Provider value={{ appConfig: this._appConfig }}>
+        <AppContext.Provider value={config}>
           <Provider store={store}>
             <I18nextProvider i18n={i18n}>
-              <OidcProvider store={store} userManager={this._userManager}>
-                <UserManagerContext.Provider value={this._userManager}>
+              <OidcProvider store={store} userManager={userManager}>
+                <UserManagerContext.Provider value={userManager}>
                   <Router basename={routerBasename}>
                     <WhiteLabellingContext.Provider value={whiteLabelling}>
-                      <SnackbarProvider service={UINotificationService}>
-                        <DialogProvider service={UIDialogService}>
-                          <ModalProvider
-                            modal={OHIFModal}
-                            service={UIModalService}
-                          >
-                            <OHIFStandaloneViewer
-                              userManager={this._userManager}
-                            />
-                          </ModalProvider>
-                        </DialogProvider>
+                      <SnackbarProvider>
+                        <ModalProvider modal={OHIFModal}>
+                          <OHIFStandaloneViewer userManager={userManager} />
+                        </ModalProvider>
                       </SnackbarProvider>
                     </WhiteLabellingContext.Provider>
                   </Router>
@@ -178,17 +116,15 @@ class App extends Component {
     }
 
     return (
-      <AppContext.Provider value={{ appConfig: this._appConfig }}>
+      <AppContext.Provider value={config}>
         <Provider store={store}>
           <I18nextProvider i18n={i18n}>
             <Router basename={routerBasename}>
               <WhiteLabellingContext.Provider value={whiteLabelling}>
-                <SnackbarProvider service={UINotificationService}>
-                  <DialogProvider service={UIDialogService}>
-                    <ModalProvider modal={OHIFModal} service={UIModalService}>
-                      <OHIFStandaloneViewer />
-                    </ModalProvider>
-                  </DialogProvider>
+                <SnackbarProvider>
+                  <ModalProvider modal={OHIFModal}>
+                    <OHIFStandaloneViewer />
+                  </ModalProvider>
                 </SnackbarProvider>
               </WhiteLabellingContext.Provider>
             </Router>
@@ -200,10 +136,10 @@ class App extends Component {
 
   initUserManager(oidc) {
     if (oidc && !!oidc.length) {
-      const firstOpenIdClient = this._appConfig.oidc[0];
+      const firstOpenIdClient = this.props.oidc[0];
 
       const { protocol, host } = window.location;
-      const { routerBasename } = this._appConfig;
+      const { routerBasename } = this.props;
       const baseUri = `${protocol}//${host}${routerBasename}`;
 
       const redirect_uri = firstOpenIdClient.redirect_uri || '/callback';
@@ -232,53 +168,22 @@ class App extends Component {
   }
 }
 
-function _initServices(services) {
-  servicesManager.registerServices(services);
-}
-
 /**
  * @param
  */
-function _initExtensions(extensions, cornerstoneExtensionConfig, appConfig) {
-  extensionManager = new ExtensionManager({
-    commandsManager,
-    servicesManager,
-    appConfig,
-  });
-
-  const requiredExtensions = [
+function _initExtensions(extensions, hotkeys) {
+  const defaultExtensions = [
     GenericViewerCommands,
-    [OHIFCornerstoneExtension, cornerstoneExtensionConfig],
-    /* WARNING: MUST BE REGISTERED _AFTER_ OHIFCornerstoneExtension */
+    OHIFCornerstoneExtension,
+    // WARNING: MUST BE REGISTERED _AFTER_ OHIFCORNERSTONEEXTENSION
     MeasurementsPanel,
   ];
-  const mergedExtensions = requiredExtensions.concat(extensions);
+  const mergedExtensions = defaultExtensions.concat(extensions);
   extensionManager.registerExtensions(mergedExtensions);
-}
 
-function _initHotkeys(hotkeys) {
-  const { hotkeyDefinitions = {} } = store.getState().preferences || {};
-  let updateStore = false;
-  let hotkeysToUse = hotkeyDefinitions;
-
-  if (!Object.keys(hotkeyDefinitions).length) {
-    hotkeysToUse = hotkeys;
-    updateStore = true;
-  }
-
-  if (hotkeysToUse) {
-    hotkeysManager.setHotkeys(hotkeysToUse);
-
-    /* Set hotkeys default based on app config. */
-    hotkeysManager.setDefaultHotKeys(hotkeys);
-
-    if (updateStore) {
-      const { hotkeyDefinitions } = hotkeysManager;
-      const windowLevelData = {};
-      store.dispatch(
-        setUserPreferences({ windowLevelData, hotkeyDefinitions })
-      );
-    }
+  // Must run after extension commands are registered
+  if (hotkeys) {
+    hotkeysManager.setHotkeys(hotkeys, true);
   }
 }
 
@@ -297,9 +202,7 @@ function _makeAbsoluteIfNecessary(url, base_url) {
     return url;
   }
 
-  /*
-   * Make sure base_url and url are not duplicating slashes.
-   */
+  // Make sure base_url and url are not duplicating slashes
   if (base_url[base_url.length - 1] === '/') {
     base_url = base_url.slice(0, base_url.length - 1);
   }
@@ -307,10 +210,8 @@ function _makeAbsoluteIfNecessary(url, base_url) {
   return base_url + url;
 }
 
-/*
- * Only wrap/use hot if in dev.
- */
+// Only wrap/use hot if in dev
 const ExportedApp = process.env.NODE_ENV === 'development' ? hot(App) : App;
 
 export default ExportedApp;
-export { commandsManager, extensionManager, hotkeysManager, servicesManager };
+export { commandsManager, extensionManager, hotkeysManager };

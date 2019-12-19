@@ -1,6 +1,3 @@
-import cloneDeep from 'lodash.clonedeep';
-import merge from 'lodash.merge';
-
 import {
   CLEAR_VIEWPORT,
   SET_ACTIVE_SPECIFIC_DATA,
@@ -11,7 +8,10 @@ import {
   SET_VIEWPORT_LAYOUT_AND_DATA,
 } from './../constants/ActionTypes.js';
 
-const DEFAULT_STATE = {
+import cloneDeep from 'lodash.clonedeep';
+import merge from 'lodash.merge';
+
+const defaultState = {
   numRows: 1,
   numColumns: 1,
   activeViewportIndex: 0,
@@ -26,137 +26,94 @@ const DEFAULT_STATE = {
 };
 
 /**
- * The definition of a viewport action.
- *
- * @typedef {Object} ViewportAction
- * @property {string} type -
- * @property {Object} data -
- * @property {Object} layout -
- * @property {number} viewportIndex -
- * @property {Object} viewportSpecificData -
+ * @param {Object} [state=defaultState]
+ * @param {Object} action
+ * @param {string} [action.type]
+ * @param {number} [action.viewportIndex]
+ * @param {Object} [action.layout]
+ * @param {Object} [action.viewportSpecificData]
  */
-
-/**
- * @param {Object} [state=DEFAULT_STATE] The current viewport state.
- * @param {ViewportAction} action A viewport action.
- */
-const viewports = (state = DEFAULT_STATE, action) => {
+const viewports = (state = defaultState, action) => {
+  let viewportSpecificData;
   let useActiveViewport = false;
-
   switch (action.type) {
-    /**
-     * Sets the active viewport index.
-     *
-     * @return {Object} New state.
-     */
-    case SET_VIEWPORT_ACTIVE: {
-      return { ...state, activeViewportIndex: action.viewportIndex };
-    }
-
-    /**
-     * Sets viewport layout.
-     *
-     * @return {Object} New state.
-     */
+    case SET_VIEWPORT_ACTIVE:
+      return Object.assign({}, state, {
+        activeViewportIndex: action.viewportIndex,
+      });
     case SET_VIEWPORT_LAYOUT: {
-      return {
-        ...state,
-        numRows: action.numRows,
-        numColumns: action.numColumns,
-        layout: { viewports: [...action.viewports] },
+      const { numRows, numColumns, viewports } = action;
+      const layout = {
+        viewports: [...viewports],
       };
-    }
 
-    /**
-     * Sets viewport layout and data.
-     *
-     * @return {Object} New state.
-     */
+      return Object.assign({}, state, { numRows, numColumns, layout });
+    }
     case SET_VIEWPORT_LAYOUT_AND_DATA: {
-      return {
-        ...state,
-        numRows: action.numRows,
-        numColumns: action.numColumns,
-        layout: { viewports: [...action.viewports] },
-        viewportSpecificData: cloneDeep(action.viewportSpecificData),
+      const { numRows, numColumns, viewports, viewportSpecificData } = action;
+      const layout = {
+        viewports: [...viewports],
       };
-    }
 
-    /**
-     * Sets viewport specific data of active viewport.
-     *
-     * @return {Object} New state.
-     */
+      return Object.assign({}, state, {
+        numRows,
+        numColumns,
+        layout,
+        viewportSpecificData: cloneDeep(viewportSpecificData),
+      });
+    }
     case SET_VIEWPORT: {
       const layout = cloneDeep(state.layout);
+      const hasPlugin = action.data && action.data.plugin;
 
-      let viewportSpecificData = cloneDeep(state.viewportSpecificData);
+      viewportSpecificData = cloneDeep(state.viewportSpecificData);
       viewportSpecificData[action.viewportIndex] = merge(
         {},
         viewportSpecificData[action.viewportIndex],
-        action.viewportSpecificData
+        action.data
       );
 
-      if (action.viewportSpecificData && action.viewportSpecificData.plugin) {
-        layout.viewports[action.viewportIndex].plugin =
-          action.viewportSpecificData.plugin;
+      if (hasPlugin) {
+        layout.viewports[action.viewportIndex].plugin = action.data.plugin;
       }
 
-      return { ...state, layout, viewportSpecificData };
+      return Object.assign({}, state, { layout, viewportSpecificData });
     }
-
-    /**
-     * Sets viewport specific data of active/any viewport.
-     *
-     * @return {Object} New state.
-     */
     case SET_ACTIVE_SPECIFIC_DATA:
       useActiveViewport = true;
     // Allow fall-through
     // eslint-disable-next-line
     case SET_SPECIFIC_DATA: {
       const layout = cloneDeep(state.layout);
+      const hasPlugin = action.data && action.data.plugin;
       const viewportIndex = useActiveViewport
         ? state.activeViewportIndex
         : action.viewportIndex;
+      const { dom } = state.viewportSpecificData[viewportIndex];
 
-      let viewportSpecificData = cloneDeep(state.viewportSpecificData);
+      viewportSpecificData = cloneDeep(state.viewportSpecificData);
       viewportSpecificData[viewportIndex] = {
-        ...action.viewportSpecificData,
+        dom,
+        ...action.data,
       };
 
-      if (action.viewportSpecificData && action.viewportSpecificData.plugin) {
-        layout.viewports[viewportIndex].plugin =
-          action.viewportSpecificData.plugin;
+      if (hasPlugin) {
+        layout.viewports[viewportIndex].plugin = action.data.plugin;
       }
 
-      return { ...state, layout, viewportSpecificData };
+      return Object.assign({}, state, { layout, viewportSpecificData });
     }
-
-    /**
-     * Clears viewport specific data of any viewport.
-     *
-     * @return {Object} New state.
-     */
-    case CLEAR_VIEWPORT: {
-      let viewportSpecificData = cloneDeep(state.viewportSpecificData);
-
+    case CLEAR_VIEWPORT:
+      viewportSpecificData = cloneDeep(state.viewportSpecificData);
       if (action.viewportIndex) {
         viewportSpecificData[action.viewportIndex] = {};
-        return { ...state, viewportSpecificData };
+        return Object.assign({}, state, { viewportSpecificData });
       } else {
-        return DEFAULT_STATE;
+        return defaultState;
       }
-    }
 
-    /**
-     * Returns the current application state.
-     *
-     * @return {Object} The current state.
-     */
-    default: {
+    default:
       return state;
-    }
   }
 };
 

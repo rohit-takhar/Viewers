@@ -1,21 +1,22 @@
 window.config = {
   // default: '/'
   routerBasename: '/',
-  whiteLabelling: {},
   extensions: [],
   showStudyList: true,
-  filterQueryParam: false,
   servers: {
     dicomWeb: [
       {
-        name: 'DCM4CHEE',
-        wadoUriRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/wado',
-        qidoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
-        wadoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
+        name: 'Orthanc',
+        wadoUriRoot: 'http://192.168.25.5:8042//dicom-web/',
+        qidoRoot: 'http://192.168.25.5:8042//dicom-web/',
+        wadoRoot: 'http://192.168.25.5:8042//dicom-web/',
         qidoSupportsIncludeField: true,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',
         enableStudyLazyLoad: true,
+	requestOptions: {
+          requestFromBrowser: true,
+        },
       },
     ],
   },
@@ -70,5 +71,4 @@ window.config = {
     // ~ Cornerstone Tools
     { commandName: 'setZoomTool', label: 'Zoom', keys: ['z'] },
   ],
-  cornerstoneExtensionConfig: {},
 };

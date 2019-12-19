@@ -1,16 +1,37 @@
+::-webkit-scrollbar {
+    width: 10px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: rgba(18,240,193,0.2);
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(18,240,193,0.2);
+}
 .ToolbarRow {
     border-bottom: var(--ui-border-thickness) solid var(--ui-border-color);
-    flex: 0 0 auto;
-    height: var(--toolbar-height);
+    overflow-y:auto;
     padding-left: 1rem;
     padding-right: 1rem;
     position: relative;
     transition: height 300ms ease;
-    width: 100%;
-    display: flex;
+    width: 7%;
+    max-height: calc(100% - var(--top-bar-height));
+    float:left;
     align-items: center;
+    background: url(http://192.168.25.5/img/bg.jpg) left top repeat;
 }
-
 ToolbarRow.expanded {
     height: calc(var(--toolbar-height) + var(--toolbar-drawer-height));
 }

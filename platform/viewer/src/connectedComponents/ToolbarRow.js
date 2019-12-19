@@ -1,20 +1,19 @@
 import React, { Component } from 'react';
+import { MODULE_TYPES } from '@ohif/core';
 import PropTypes from 'prop-types';
 import { withTranslation } from 'react-i18next';
-
-import { MODULE_TYPES } from '@ohif/core';
 import {
   ExpandableToolMenu,
   RoundedButtonGroup,
   ToolbarButton,
   withModal,
-  withDialog,
 } from '@ohif/ui';
 
 import './ToolbarRow.css';
 import { commandsManager, extensionManager } from './../App.js';
 
 import ConnectedCineDialog from './ConnectedCineDialog';
+import ConnectedViewportDownloadForm from './ConnectedViewportDownloadForm';
 import ConnectedLayoutButton from './ConnectedLayoutButton';
 import ConnectedPluginSwitch from './ConnectedPluginSwitch.js';
 
@@ -46,6 +45,7 @@ class ToolbarRow extends Component {
     this.state = {
       toolbarButtons: toolbarButtonDefinitions,
       activeButtons: [],
+      isCineDialogOpen: false,
     };
 
     this._handleBuiltIn = _handleBuiltIn.bind(this);
@@ -54,7 +54,7 @@ class ToolbarRow extends Component {
     this.buttonGroups = {
       left: [
         // TODO: This should come from extensions, instead of being baked in
-        {
+       {
           value: 'studies',
           icon: 'th-large',
           bottomLabel: this.props.t('Series'),
@@ -106,6 +106,13 @@ class ToolbarRow extends Component {
       this.state.activeButtons
     );
 
+    const cineDialogContainerStyle = {
+      display: this.state.isCineDialogOpen ? 'block' : 'none',
+      position: 'absolute',
+      top: '82px',
+      zIndex: 999,
+    };
+
     const onPress = (side, value) => {
       this.props.handleSidePanelChange(side, value);
     };
@@ -115,28 +122,25 @@ class ToolbarRow extends Component {
     return (
       <>
         <div className="ToolbarRow">
-          <div className="pull-left m-t-1 p-y-1" style={{ padding: '10px' }}>
             <RoundedButtonGroup
               options={this.buttonGroups.left}
               value={this.props.selectedLeftSidePanel || ''}
               onValueChanged={onPressLeft}
             />
-          </div>
-          {buttonComponents}
+          {this.buttonGroups.right.length && (
+            <RoundedButtonGroup
+              options={this.buttonGroups.right}
+              value={this.props.selectedRightSidePanel || ''}
+              onValueChanged={onPressRight}
+            />
+          )}
           <ConnectedLayoutButton />
+          {buttonComponents}
           <ConnectedPluginSwitch studies={this.props.studies} />
-          <div
-            className="pull-right m-t-1 rm-x-1"
-            style={{ marginLeft: 'auto' }}
-          >
-            {this.buttonGroups.right.length && (
-              <RoundedButtonGroup
-                options={this.buttonGroups.right}
-                value={this.props.selectedRightSidePanel || ''}
-                onValueChanged={onPressRight}
-              />
-            )}
-          </div>
+
+        </div>
+        <div className="CineDialogContainer" style={cineDialogContainerStyle}>
+          <ConnectedCineDialog />
         </div>
       </>
     );
@@ -150,8 +154,7 @@ function _getCustomButtonComponent(button, activeButtons) {
   // Check if its a valid customComponent. Later on an CustomToolbarComponent interface could be implemented.
   if (isValidComponent) {
     const parentContext = this;
-    const activeButtonsIds = activeButtons.map(button => button.id);
-    const isActive = activeButtonsIds.includes(button.id);
+    const isActive = activeButtons.includes(button.id);
 
     return (
       <CustomComponent
@@ -159,7 +162,7 @@ function _getCustomButtonComponent(button, activeButtons) {
         toolbarClickCallback={_handleToolbarButtonClick.bind(this)}
         button={button}
         key={button.id}
-        activeButtons={activeButtonsIds}
+        activeButtons={activeButtons}
         isActive={isActive}
       />
     );
@@ -172,7 +175,7 @@ function _getExpandableButtonComponent(button, activeButtons) {
   const childButtons = button.buttons.map(childButton => {
     childButton.onClick = _handleToolbarButtonClick.bind(this, childButton);
 
-    if (activeButtons.map(button => button.id).indexOf(childButton.id) > -1) {
+    if (activeButtons.indexOf(childButton.id) > -1) {
       activeCommand = childButton.id;
     }
 
@@ -197,7 +200,7 @@ function _getDefaultButtonComponent(button, activeButtons) {
       label={button.label}
       icon={button.icon}
       onClick={_handleToolbarButtonClick.bind(this, button)}
-      isActive={activeButtons.map(button => button.id).includes(button.id)}
+      isActive={activeButtons.includes(button.id)}
     />
   );
 }
@@ -232,8 +235,6 @@ function _getButtonComponents(toolbarButtons, activeButtons) {
  * @param {*} props
  */
 function _handleToolbarButtonClick(button, evt, props) {
-  const { activeButtons } = this.state;
-
   if (button.commandName) {
     const options = Object.assign({ evt }, button.commandOptions);
     commandsManager.runCommand(button.commandName, options);
@@ -243,12 +244,11 @@ function _handleToolbarButtonClick(button, evt, props) {
   // TODO: We can update this to be a `getter` on the extension to query
   //       For the active tools after we apply our updates?
   if (button.type === 'setToolActive') {
-    const toggables = activeButtons.filter(
-      ({ options }) => options && !options.togglable
-    );
-    this.setState({ activeButtons: [...toggables, button] });
+    this.setState({
+      activeButtons: [button.id],
+    });
   } else if (button.type === 'builtIn') {
-    this._handleBuiltIn(button);
+    this._handleBuiltIn(button.options);
   }
 }
 
@@ -273,47 +273,21 @@ function _getVisibleToolbarButtons() {
   return toolbarButtonDefinitions;
 }
 
-function _handleBuiltIn(button) {
-  /* TODO: Keep cine button active until its unselected. */
-  const { dialog, modal, t } = this.props;
-  const { dialogId } = this.state;
-  const { id, options } = button;
-
-  if (options.behavior === 'CINE') {
-    if (dialogId) {
-      dialog.dismiss({ id: dialogId });
-      this.setState(state => ({
-        dialogId: null,
-        activeButtons: [
-          ...state.activeButtons.filter(button => button.id !== id),
-        ],
-      }));
-    } else {
-      const spacing = 20;
-      const { x, y } = document
-        .querySelector(`.ViewerMain`)
-        .getBoundingClientRect();
-      const newDialogId = dialog.create({
-        content: ConnectedCineDialog,
-        defaultPosition: {
-          x: x + spacing || 0,
-          y: y + spacing || 0,
-        },
-      });
-      this.setState(state => ({
-        dialogId: newDialogId,
-        activeButtons: [...state.activeButtons, button],
-      }));
-    }
+function _handleBuiltIn({ behavior } = {}) {
+  if (behavior === 'CINE') {
+    this.setState({
+      isCineDialogOpen: !this.state.isCineDialogOpen,
+    });
   }
 
-  if (options.behavior === 'DOWNLOAD_SCREEN_SHOT') {
-    commandsManager.runCommand('showDownloadViewportModal', {
-      title: t('Download High Quality Image'),
+  if (behavior === 'DOWNLOAD_SCREEN_SHOT') {
+    this.props.modalContext.show(ConnectedViewportDownloadForm, {
+      title: this.props.t('Download High Quality Image'),
+      customClassName: 'ViewportDownloadForm',
     });
   }
 }
 
 export default withTranslation(['Common', 'ViewportDownloadForm'])(
-  withModal(withDialog(ToolbarRow))
+  withModal(ToolbarRow)
 );

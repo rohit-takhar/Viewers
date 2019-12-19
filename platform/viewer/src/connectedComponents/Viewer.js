@@ -3,15 +3,16 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 import { MODULE_TYPES } from '@ohif/core';
-import OHIF, { DICOMSR } from '@ohif/core';
-import { withDialog } from '@ohif/ui';
+import OHIF from '@ohif/core';
 import moment from 'moment';
 import ConnectedHeader from './ConnectedHeader.js';
 import ConnectedToolbarRow from './ConnectedToolbarRow.js';
+import ConnectedLabellingOverlay from './ConnectedLabellingOverlay';
 import ConnectedStudyBrowser from './ConnectedStudyBrowser.js';
 import ConnectedViewerMain from './ConnectedViewerMain.js';
 import SidePanel from './../components/SidePanel.js';
 import { extensionManager } from './../App.js';
+import DICOMSR from '../lib/DICOMSR';
 
 // Contexts
 import WhiteLabellingContext from '../context/WhiteLabellingContext.js';
@@ -58,32 +59,23 @@ class Viewer extends Component {
   static propTypes = {
     studies: PropTypes.array,
     studyInstanceUids: PropTypes.array,
-    activeServer: PropTypes.shape({
-      type: PropTypes.string,
-      wadoRoot: PropTypes.string,
-    }),
+    activeServer: PropTypes.object,
     onTimepointsUpdated: PropTypes.func,
     onMeasurementsUpdated: PropTypes.func,
     // window.store.getState().viewports.viewportSpecificData
     viewports: PropTypes.object.isRequired,
     // window.store.getState().viewports.activeViewportIndex
     activeViewportIndex: PropTypes.number.isRequired,
-    isStudyLoaded: PropTypes.bool,
-    dialog: PropTypes.object,
+    studyLoaded: PropTypes.bool,
   };
 
   constructor(props) {
     super(props);
-
-    const { activeServer } = this.props;
-    const server = Object.assign({}, activeServer);
-
     OHIF.measurements.MeasurementApi.setConfiguration({
       dataExchange: {
         retrieve: DICOMSR.retrieveMeasurements,
         store: DICOMSR.storeMeasurements,
       },
-      server,
     });
 
     OHIF.measurements.TimepointApi.setConfiguration({
@@ -104,12 +96,6 @@ class Viewer extends Component {
     selectedLeftSidePanel: 'studies', // TODO: Don't hardcode this
     thumbnails: [],
   };
-
-  componentWillUnmount() {
-    if (this.props.dialog) {
-      this.props.dialog.dismissAll();
-    }
-  }
 
   retrieveTimepoints = filter => {
     OHIF.log.info('retrieveTimepoints');
@@ -177,7 +163,7 @@ class Viewer extends Component {
   };
 
   componentDidMount() {
-    const { studies, isStudyLoaded } = this.props;
+    const { studies, activeServer } = this.props;
     const { TimepointApi, MeasurementApi } = OHIF.measurements;
     const currentTimepointId = 'TimepointId';
 
@@ -187,6 +173,7 @@ class Viewer extends Component {
 
     const measurementApi = new MeasurementApi(timepointApi, {
       onMeasurementsUpdated: this.onMeasurementsUpdated,
+      server: activeServer,
     });
 
     this.currentTimepointId = currentTimepointId;
@@ -197,7 +184,7 @@ class Viewer extends Component {
       const patientId = studies[0] && studies[0].patientId;
 
       timepointApi.retrieveTimepoints({ patientId });
-      if (isStudyLoaded) {
+      if (this.props.studyLoaded) {
         this.measurementApi.retrieveMeasurements(patientId, [
           currentTimepointId,
         ]);
@@ -209,13 +196,13 @@ class Viewer extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { studies, isStudyLoaded } = this.props;
+    const { studies, studyLoaded } = this.props;
     if (studies !== prevProps.studies) {
       this.setState({
         thumbnails: _mapStudiesToThumbnails(studies),
       });
     }
-    if (isStudyLoaded && isStudyLoaded !== prevProps.isStudyLoaded) {
+    if (studyLoaded && studyLoaded !== prevProps.studyLoaded) {
       const patientId = studies[0] && studies[0].patientId;
       const { currentTimepointId } = this;
 
@@ -252,7 +239,7 @@ class Viewer extends Component {
             </UserManagerContext.Consumer>
           )}
         </WhiteLabellingContext.Consumer>
-
+        <div style={{width:"100%", height:"100%"}}>
         {/* TOOLBAR */}
         <ConnectedToolbarRow
           isLeftSidePanelOpen={this.state.isLeftSidePanelOpen}
@@ -309,6 +296,7 @@ class Viewer extends Component {
                 studyMetadata={this.props.studies}
               />
             )}
+            <img src="https://caring-research.com/html/img/logo.png"/>
           </SidePanel>
 
           {/* MAIN */}
@@ -326,12 +314,14 @@ class Viewer extends Component {
             )}
           </SidePanel>
         </div>
+        </div>
+        <ConnectedLabellingOverlay />
       </>
     );
   }
 }
 
-export default withDialog(Viewer);
+export default Viewer;
 
 /**
  * What types are these? Why do we have "mapping" dropped in here instead of in

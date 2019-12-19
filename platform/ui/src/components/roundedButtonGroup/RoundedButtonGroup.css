@@ -1,6 +1,7 @@
 .RoundedButtonGroup {
-  --height: 25px;
-
+  margin-top:15px;
+  height: 40px;
+  width:100%;
   position: relative;
   z-index: 0;
 }
@@ -8,8 +9,8 @@
 .roundedButtonWrapper {
   cursor: pointer;
   display: inline-block;
-  float: left;
-  margin-left: -2px;
+  float: right;
+  margin-left: 0px;
   text-decoration: none;
   text-align: center;
 }
@@ -19,19 +20,33 @@
   cursor: not-allowed;
 }
 
-.RoundedButtonGroup .roundedButtonWrapper .roundedButton {
+.RoundedButtonGroup .roundedButton {
   align-items: center;
-  background-color: var(--ui-gray-dark);
-  border: 2px solid var(--ui-border-color-dark);
-  color: var(--text-secondary-color);
-  display: flex;
+  background-color: transparent;
   font-size: 15px;
   font-weight: 500;
   justify-content: center;
   height: var(--height);
   line-height: var(--height);
-  padding: 0 22px;
-  position: relative;
+  padding: 5px;
+  text-transform: uppercase;
+  transition: var(--sidebar-transition);
+  z-index: 0;
+  cursor: pointer;
+}
+
+.RoundedButtonGroup .roundedButtonWrapper .measurement_panel {
+  align-items: center;
+  background-color: transparent;
+  border: 1px solid #209c8c;
+  display: flex;
+  color: #fdca9a;
+  font-size: 15px;
+  font-weight: 500;
+  justify-content: center;
+  height: var(--height);
+  line-height: var(--height);
+  padding: 10px;
   text-transform: uppercase;
   transition: var(--sidebar-transition);
   z-index: 1;
@@ -52,25 +67,18 @@
 }
 
 .bottomLabel {
-  color: var(--text-secondary-color);
+  color: #fdca9a;
   font-size: 12px;
   font-weight: 500;
   line-height: 12px;
   margin-top: 8px;
+  text-align:center;
+  justify-content: center;
+  display: inline-block;
 }
 
 .roundedButtonWrapper:first-child {
   margin-left: 0;
-}
-
-.RoundedButtonGroup .roundedButtonWrapper:first-child .roundedButton {
-  border-bottom-left-radius: var(--height);
-  border-top-left-radius: var(--height);
-}
-
-.RoundedButtonGroup .roundedButtonWrapper:last-child .roundedButton {
-  border-bottom-right-radius: var(--height);
-  border-top-right-radius: var(--height);
 }
 
 .roundedButtonWrapper:hover .roundedButton {
@@ -79,8 +87,22 @@
 }
 
 .roundedButtonWrapper.active .roundedButton {
-  background-color: var(--active-color);
-  border-color: var(--ui-border-color-active);
+  background-color: black;
+  border-color: black;
+  border-radius:0;
+  color: var(--ui-gray-dark);
+  z-index: 2;
+}
+
+.roundedButtonWrapper:hover .measurement_panel {
+  background-color: var(--box-background-color);
+  color: var(--ui-gray-dark);
+}
+
+.roundedButtonWrapper.active .measurement_panel {
+  background-color: black;
+  border-color: black;
+  border-radius:none;
   color: var(--ui-gray-dark);
   z-index: 2;
 }

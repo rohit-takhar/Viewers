@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
+import Dropzone from 'react-dropzone';
 import OHIF from '@ohif/core';
 import { withRouter } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -58,11 +59,7 @@ function StudyListRoute(props) {
   const appContext = useContext(AppContext);
   // ~~ RESPONSIVE
   const displaySize = useMedia(
-    [
-      '(min-width: 1750px)',
-      '(min-width: 1000px) and (max-width: 1749px)',
-      '(max-width: 999px)',
-    ],
+    ['(min-width: 1750px)', '(min-width: 1000px)', '(min-width: 768px)'],
     ['large', 'medium', 'small'],
     'small'
   );
@@ -116,8 +113,7 @@ function StudyListRoute(props) {
       pageNumber,
       displaySize,
       server,
-    ]
-  );
+    ]);
 
   // TODO: Update Server
   // if (this.props.server !== prevProps.server) {
@@ -192,12 +188,10 @@ function StudyListRoute(props) {
   }
 
   function handleFilterChange(fieldName, value) {
-    setFilterValues(state => {
-      return {
-        ...state,
-        [fieldName]: value,
-      };
-    });
+    const updatedFilterValues = Object.assign({}, filterValues);
+
+    updatedFilterValues[fieldName] = value;
+    setFilterValues(updatedFilterValues);
   }
 
   return (
@@ -261,7 +255,6 @@ function StudyListRoute(props) {
           filterValues={filterValues}
           onFilterChange={handleFilterChange}
           studyListDateFilterNumDays={appConfig.studyListDateFilterNumDays}
-          displaySize={displaySize}
         />
         {/* PAGINATION FOOTER */}
         <TablePagination

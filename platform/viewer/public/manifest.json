@@ -1,7 +1,7 @@
 {
-  "name": "OHIF Viewer",
+  "name": "CARPL Viewer",
   "short_name": "Viewer",
-  "description": "OHIF Viewer",
+  "description": "CARPL Viewer",
   "dir": "auto",
   "lang": "en-US",
   "orientation": "any",

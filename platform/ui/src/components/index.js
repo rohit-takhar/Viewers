@@ -6,8 +6,8 @@ import { TableList, TableListItem } from './tableList';
 import {
   AboutContent,
   UserPreferences,
-  UserPreferencesForm,
-} from './userPreferencesForm';
+  UserPreferencesModal,
+} from './userPreferencesModal';
 
 import { Checkbox } from './checkbox';
 import { CineDialog } from './cineDialog';
@@ -17,7 +17,6 @@ import { RoundedButtonGroup } from './roundedButtonGroup';
 import { SelectTree } from './selectTree';
 import { SimpleDialog } from './simpleDialog';
 import { OHIFModal } from './ohifModal';
-import { ContextMenu } from './contextMenu';
 import {
   PageToolbar,
   StudyList,
@@ -28,7 +27,6 @@ import { ToolbarSection } from './toolbarSection';
 import { Tooltip } from './tooltip';
 
 export {
-  ContextMenu,
   Checkbox,
   CineDialog,
   ViewportDownloadForm,
@@ -54,6 +52,6 @@ export {
   Tooltip,
   AboutContent,
   UserPreferences,
-  UserPreferencesForm,
+  UserPreferencesModal,
   OHIFModal,
 };

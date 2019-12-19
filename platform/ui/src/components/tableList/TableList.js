@@ -28,7 +28,7 @@ export class TableList extends Component {
     } else {
       return (
         <React.Fragment>
-          <div className="tableListHeaderTitle">{this.props.headerTitle}</div>
+          <div className="tableListHeaderTitle">Focus Areas</div>
           <div className="numberOfItems">{this.props.children.length}</div>
         </React.Fragment>
       );

@@ -29,21 +29,19 @@ function addLocales(newLocales) {
   customDebug(resourceBundle, 'info');
 }
 
-/*
- * Note: Developers can add the API key to use the
- * in-context editor using environment variables.
- * (DO NOT commit the API key)
- */
+// Note: Developers can add the API key to use the in-context editor.
+// DO NOT commit the API key
+const config = (window.config && window.config.i18n) || {};
+
 const locizeOptions = {
-  projectId: process.env.LOCIZE_PROJECTID,
-  apiKey: process.env.LOCIZE_API_KEY,
+  projectId: config.LOCIZE_PROJECTID,
+  apiKey: config.LOCIZE_API_KEY,
   referenceLng: 'en-US',
   fallbacklng: 'en-US',
 };
 
-const envUseLocize = !!process.env.USE_LOCIZE;
-const envApiKeyAvailable = !!process.env.LOCIZE_API_KEY;
-const DEFAULT_LANGUAGE = 'en-US';
+const envUseLocize = !!config.USE_LOCIZE;
+const envApiKeyAvailable = !!config.LOCIZE_API_KEY;
 
 function initI18n(
   detection = detectionOptions,
@@ -76,7 +74,7 @@ function initI18n(
       // init i18next
       // for all options read: https://www.i18next.com/overview/configuration-options
       .init({
-        fallbackLng: DEFAULT_LANGUAGE,
+        fallbackLng: 'en-US',
         saveMissing: apiKeyAvailable,
         debug: debugMode,
         keySeparator: false,
@@ -113,7 +111,7 @@ function initI18n(
       // init i18next
       // for all options read: https://www.i18next.com/overview/configuration-options
       .init({
-        fallbackLng: DEFAULT_LANGUAGE,
+        fallbackLng: 'en-US',
         resources: locales,
         debug: debugMode,
         keySeparator: false,
@@ -138,6 +136,5 @@ customDebug(`version ${pkg.version} loaded.`, 'info');
 i18n.initializing = initI18n();
 i18n.initI18n = initI18n;
 i18n.addLocales = addLocales;
-i18n.defaultLanguage = DEFAULT_LANGUAGE;
 
 export default i18n;

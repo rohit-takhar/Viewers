@@ -1,9 +1,9 @@
 .viewport-container {
   float: left;
   position: relative;
-  border: var(--viewport-border-thickness) solid var(--ui-border-color);
+  border: 1px solid #2cbfb4;
 }
 
 .viewport-container.active {
-  border: var(--viewport-border-thickness) solid var(--active-color);
+  border: 1px solid #2cbfb4;
 }

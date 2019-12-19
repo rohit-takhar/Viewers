@@ -20,8 +20,8 @@ const vtkExtension = {
   getToolbarModule() {
     return toolbarModule;
   },
-  getCommandsModule({ commandsManager }) {
-    return commandsModule({ commandsManager });
+  getCommandsModule() {
+    return commandsModule;
   },
 };
 

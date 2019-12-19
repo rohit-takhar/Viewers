@@ -3,14 +3,15 @@
   flex: 1;
   flex-flow: row nowrap;
   align-items: stretch;
-  height: calc(100% - var(--toolbar-height) - var(--top-bar-height));
-  width: 100%;
+  height: calc(100% - var(--top-bar-height));
+  width: 93%;
   overflow: hidden;
 }
 
 .sidepanel {
   flex: 1;
   height: 100%;
+  width:15%;
   transition: var(--sidepanel-transition);
 }
 

@@ -1,14 +1,13 @@
 window.config = {
   routerBasename: '/pwa',
-  whiteLabelling: {},
   showStudyList: true,
   servers: {
     dicomWeb: [
       {
         name: 'DCM4CHEE',
-        wadoUriRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/wado',
-        qidoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
-        wadoRoot: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
+        wadoUriRoot: 'http://192.168.25.5:8042//dicom-web/',
+        qidoRoot: 'http://192.168.25.5:8042//dicom-web/',
+        wadoRoot: 'http://192.168.25.5:8042//dicom-web/',
         qidoSupportsIncludeField: true,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',

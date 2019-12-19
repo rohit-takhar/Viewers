@@ -9,15 +9,16 @@ export default function(configuration = {}) {
 
   cornerstoneTools.external.cornerstone = cornerstone;
   cornerstoneTools.external.Hammer = Hammer;
-  cornerstoneTools.external.cornerstoneMath = cornerstoneMath;
+  cornerstoneTools.external.cornerstoneMath = cornerstoneMath; 
   cornerstoneTools.init(configuration);
 
   // Set the tool font and font size
   // context.font = "[style] [variant] [weight] [size]/[line height] [font family]";
   const fontFamily =
     'Roboto, OpenSans, HelveticaNeue-Light, Helvetica Neue Light, Helvetica Neue, Helvetica, Arial, Lucida Grande, sans-serif';
-  cornerstoneTools.textStyle.setFont(`16px ${fontFamily}`);
-
+  //cornerstoneTools.textStyle.setFont(`16px ${fontFamily}`);
+  cornerstoneTools.textStyle.setFont(`0px ${fontFamily}`);
+	
   // Tool styles/colors
   cornerstoneTools.toolStyle.setToolWidth(2);
   cornerstoneTools.toolColors.setToolColor('rgb(255, 255, 0)');

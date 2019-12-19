@@ -23,21 +23,10 @@ const TOOLBAR_BUTTON_TYPES = {
   BUILT_IN: 'builtIn',
 };
 
-const TOOLBAR_BUTTON_BEHAVIORS = {
-  CINE: 'CINE',
-  DOWNLOAD_SCREEN_SHOT: 'DOWNLOAD_SCREEN_SHOT',
-};
-
-/* TODO: Export enums through a extension manager. */
-const enums = {
-  TOOLBAR_BUTTON_TYPES,
-  TOOLBAR_BUTTON_BEHAVIORS,
-};
-
 const definitions = [
   {
     id: 'StackScroll',
-    label: 'Stack Scroll',
+    label: 'Scroll',
     icon: 'bars',
     //
     type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
@@ -113,14 +102,9 @@ const definitions = [
     //
     type: TOOLBAR_BUTTON_TYPES.BUILT_IN,
     options: {
-      behavior: TOOLBAR_BUTTON_BEHAVIORS.CINE,
+      behavior: 'CINE',
     },
   },
-  {
-    id: 'More',
-    label: 'More',
-    icon: 'ellipse-circle',
-    buttons: [
       {
         id: 'Magnify',
         label: 'Magnify',
@@ -130,7 +114,7 @@ const definitions = [
         commandName: 'setToolActive',
         commandOptions: { toolName: 'Magnify' },
       },
-      {
+/*      {
         id: 'WwwcRegion',
         label: 'ROI Window',
         icon: 'stop',
@@ -147,15 +131,24 @@ const definitions = [
         type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
         commandName: 'setToolActive',
         commandOptions: { toolName: 'DragProbe' },
-      },
+      },*/
       {
         id: 'EllipticalRoi',
         label: 'Ellipse',
-        icon: 'circle-o',
+        icon: 'ellipse-circle',
         //
         type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
         commandName: 'setToolActive',
         commandOptions: { toolName: 'EllipticalRoi' },
+      },
+      {
+        id: 'CircleRoi',
+        label: 'Circle',
+        icon: 'circle-o',
+        //
+        type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+        commandName: 'setToolActive',
+        commandOptions: { toolName: 'CircleRoi' },
       },
       {
         id: 'RectangleRoi',
@@ -167,6 +160,15 @@ const definitions = [
         commandOptions: { toolName: 'RectangleRoi' },
       },
       {
+        id: 'FreehandRoi',
+        label: 'Freehand',
+        icon: 'edit',
+        //
+        type: TOOLBAR_BUTTON_TYPES.SET_TOOL_ACTIVE,
+        commandName: 'setToolActive',
+        commandOptions: { toolName: 'FreehandRoi' },
+      },
+      {
         id: 'Invert',
         label: 'Invert',
         icon: 'adjust',
@@ -176,7 +178,7 @@ const definitions = [
       },
       {
         id: 'RotateRight',
-        label: 'Rotate Right',
+        label: 'Rotate',
         icon: 'rotate-right',
         //
         type: TOOLBAR_BUTTON_TYPES.COMMAND,
@@ -231,12 +233,9 @@ const definitions = [
         //
         type: TOOLBAR_BUTTON_TYPES.BUILT_IN,
         options: {
-          behavior: TOOLBAR_BUTTON_BEHAVIORS.DOWNLOAD_SCREEN_SHOT,
-          togglable: true,
+          behavior: 'DOWNLOAD_SCREEN_SHOT',
         },
       },
-    ],
-  },
 ];
 
 export default {

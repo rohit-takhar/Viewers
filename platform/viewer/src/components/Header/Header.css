@@ -1,11 +1,8 @@
 /* Viewer Route */
 .entry-header {
-  padding: 10px 15px;
-  height: var(--top-bar-height);
-}
-
-.dd-item {
-  width: 100%;
+  padding: 10px 15px 5px 5px;
+  height: 50px;
+  background: url(http://192.168.25.5/img/bg.jpg) left top repeat;
 }
 
 /* Home Page */
@@ -20,6 +17,9 @@
 .header-left-box {
   display: inline-block;
   position: relative;
+}
+.logo {
+  width: 70%;
 }
 
 .header-viewerLink {

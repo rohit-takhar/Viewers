@@ -23,7 +23,7 @@ export default function({ eventData, tool, toolGroupId, toolGroup }) {
 
   measurement = Object.assign(measurement, measurementData);
   measurement.viewport = cornerstone.getViewport(eventData.element);
-
+  log.info(measurementData);
   measurementApi.updateMeasurement(toolType, measurement);
 
   // TODO: Notify about the last activated measurement

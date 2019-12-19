@@ -31,11 +31,11 @@ describe('getWADORSImageId', () => {
     it('should work on a real wadorsuri', () => {
       const instance = {
         wadorsuri:
-          'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs/studies/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.1/series/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.2/instances/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.8/frames/22',
+          'http://localhost:8042//dicom-web//studies/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.1/series/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.2/instances/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.8/frames/22',
       };
 
       expect(getWADORSImageId(instance)).toEqual(
-        'wadors:https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs/studies/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.1/series/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.2/instances/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.8/frames/1'
+        'wadors:http://localhost:8042//dicom-web//studies/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.1/series/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.2/instances/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.8/frames/1'
       );
     });
   });
@@ -54,11 +54,11 @@ describe('getWADORSImageId', () => {
       const frame = '42';
       const instance = {
         wadorsuri:
-          'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs/studies/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.1/series/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.2/instances/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.8/frames/22',
+          'http://localhost:8042//dicom-web//studies/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.1/series/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.2/instances/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.8/frames/22',
       };
 
       expect(getWADORSImageId(instance, frame)).toEqual(
-        'wadors:https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs/studies/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.1/series/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.2/instances/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.8/frames/43'
+        'wadors:http://localhost:8042//dicom-web//studies/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.1/series/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.2/instances/1.3.6.1.4.1.25403.52237031786.3872.20100510032220.8/frames/43'
       );
     });
   });

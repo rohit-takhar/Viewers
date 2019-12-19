@@ -46,23 +46,21 @@ class DatasetsList extends Component {
   }
 
   render() {
-    const { loading, datasets, filter, error } = this.props;
-    
-    if (error) {
-      return <p>{error}</p>;
+    if (this.props.error) {
+      return <p>{this.props.error}</p>;
     }
 
     const loadingIcon = (
       <Icon name="circle-notch" className="loading-icon-spin loading-icon" />
     );
 
-    if (loading) {
+    if (this.props.loading) {
       return loadingIcon;
     }
 
     const body = (
       <tbody id="DatasetList">
-        {datasets.filter(dataset => (dataset.name.split('/')[5].toLowerCase().includes(filter.toLowerCase()) || filter=="")).map(this.renderTableRow)}
+        {this.props.datasets.map(this.renderTableRow)}
       </tbody>
     );
 
@@ -73,7 +71,7 @@ class DatasetsList extends Component {
             <th>{this.props.t('Dataset')}</th>
           </tr>
         </thead>
-        {datasets && body}
+        {this.props.datasets && body}
       </table>
     );
   }

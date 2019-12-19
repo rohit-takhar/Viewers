@@ -1,165 +1,147 @@
 import { Icon, SelectTree } from '@ohif/ui';
-import React, { useState, useEffect, useRef } from 'react';
-import PropTypes from 'prop-types';
-import cloneDeep from 'lodash.clonedeep';
+import React, { Component } from 'react';
 
 import LabellingTransition from './LabellingTransition.js';
 import OHIFLabellingData from './OHIFLabellingData.js';
-import EditDescriptionDialog from './../EditDescriptionDialog/EditDescriptionDialog.js';
-import './LabellingFlow.css';
+import PropTypes from 'prop-types';
+import bounding from '../../lib/utils/bounding.js';
+import cloneDeep from 'lodash.clonedeep';
+import { getAddLabelButtonStyle } from './labellingPositionUtils.js';
 
-const LabellingFlow = ({
-  measurementData,
-  editLocation,
-  editDescription,
-  skipAddLabelButton,
-  updateLabelling,
-  labellingDoneCallback,
-  editDescriptionOnDialog,
-}) => {
-  const [fadeOutTimer, setFadeOutTimer] = useState();
-  const [showComponent, setShowComponent] = useState(true);
-  const descriptionInput = useRef();
-  const [state, setState] = useState({
-    measurementData,
-    editLocation,
-    editDescription,
-    skipAddLabelButton,
-  });
+export default class LabellingFlow extends Component {
+  static propTypes = {
+    eventData: PropTypes.object.isRequired,
+    measurementData: PropTypes.object.isRequired,
+    labellingDoneCallback: PropTypes.func.isRequired,
+    updateLabelling: PropTypes.func.isRequired,
 
-  useEffect(() => {
-    const newMeasurementData = cloneDeep(measurementData);
-
-    if (editDescription) {
-      newMeasurementData.description = undefined;
-    }
-
-    if (editLocation) {
-      newMeasurementData.location = undefined;
-    }
-
-    let newEditLocation = editLocation;
-    if (!editDescription && !editLocation) {
-      newEditLocation = true;
-    }
-
-    setState(state => ({
-      ...state,
-      editLocation: newEditLocation,
-      measurementData: newMeasurementData,
-    }));
-  }, [editDescription, editLocation, measurementData]);
-
-  useEffect(() => {
-    if (descriptionInput.current) {
-      descriptionInput.current.focus();
-    }
-  }, [state]);
-
-  const relabel = event =>
-    setState(state => ({ ...state, editLocation: true }));
-
-  const setDescriptionUpdateMode = () => {
-    descriptionInput.current.focus();
-    setState(state => ({ ...state, editDescription: true }));
+    initialTopDistance: PropTypes.number,
+    skipAddLabelButton: PropTypes.bool,
+    editLocation: PropTypes.bool,
+    editDescription: PropTypes.bool,
   };
 
-  const descriptionCancel = () => {
-    const { description = '' } = cloneDeep(state);
-    descriptionInput.current.value = description;
-    setState(state => ({ ...state, editDescription: false }));
-  };
+  constructor(props) {
+    super(props);
 
-  const handleKeyPress = event => {
-    if (event.key === 'Enter') {
-      descriptionSave();
+    const { location, locationLabel, description } = props.measurementData;
+
+    let style = props.componentStyle;
+    if (!props.skipAddLabelButton) {
+      style = getAddLabelButtonStyle(props.measurementData, props.eventData);
     }
-  };
 
-  const descriptionSave = () => {
-    const description = descriptionInput.current.value;
-    updateLabelling({ description });
-
-    setState(state => ({
-      ...state,
+    this.state = {
+      location,
+      locationLabel,
       description,
-      editDescription: false,
-    }));
-  };
+      skipAddLabelButton: props.skipAddLabelButton,
+      editDescription: props.editDescription,
+      editLocation: props.editLocation,
+      componentStyle: style,
+      confirmationState: false,
+      displayComponent: true,
+    };
 
-  const selectTreeSelectCallback = (event, itemSelected) => {
-    const location = itemSelected.value;
-    const locationLabel = itemSelected.label;
-    updateLabelling({ location });
+    this.mainElement = React.createRef();
+    this.descriptionInput = React.createRef();
 
-    setState(state => ({
-      ...state,
-      editLocation: false,
-      measurementData: {
-        ...state.measurementData,
-        location,
-        locationLabel,
-      },
-    }));
-  };
+    this.initialItems = OHIFLabellingData;
+    this.currentItems = cloneDeep(this.initialItems);
+  }
 
-  const showLabelling = () => {
-    setState(state => ({
-      ...state,
-      skipAddLabelButton: true,
-      editLocation: false,
-    }));
-  };
-
-  /*
-   * Waits for 1 sec to dismiss the labelling component.
-   *
-   */
-  const fadeOutAndLeave = () =>
-    setFadeOutTimer(setTimeout(fadeOutAndLeaveFast, 1000));
-
-  const fadeOutAndLeaveFast = () => setShowComponent(false);
-
-  const clearFadeOutTimer = () => {
-    if (fadeOutTimer) {
-      clearTimeout(fadeOutTimer);
-      setFadeOutTimer(null);
+  componentDidUpdate = () => {
+    this.repositionComponent();
+    if (this.state.editDescription) {
+      this.descriptionInput.current.focus();
     }
   };
 
-  const descriptionDialogUpdate = description => {
-    updateLabelling({ description });
-    labellingDoneCallback();
-  };
+  render() {
+    let mainElementClassName = 'labellingComponent';
+    if (this.state.editDescription) {
+      mainElementClassName += ' editDescription';
+    }
 
-  const labellingStateFragment = () => {
-    const { skipAddLabelButton, editLocation, measurementData } = state;
-    const { description, locationLabel, location } = measurementData;
+    const style = Object.assign({}, this.state.componentStyle);
+    if (this.state.skipAddLabelButton) {
+      if (style.left - 160 < 0) {
+        style.left = 0;
+      } else {
+        style.left -= 160;
+      }
+    }
+
+    if (this.state.editLocation) {
+      style.maxHeight = '70vh';
+      if (!this.initialTopDistance) {
+        this.initialTopDistance = window.innerHeight - window.innerHeight * 0.3;
+        style.top = `${this.state.componentStyle.top -
+          this.initialTopDistance / 2}px`;
+      } else {
+        style.top = `${this.state.componentStyle.top}px`;
+      }
+    }
+
+    return (
+      <LabellingTransition
+        displayComponent={this.state.displayComponent}
+        onTransitionExit={this.props.labellingDoneCallback}
+      >
+        <>
+          <div className="labellingComponent-overlay"></div>
+          <div
+            className={mainElementClassName}
+            style={style}
+            ref={this.mainElement}
+            onMouseLeave={this.fadeOutAndLeave}
+            onMouseEnter={this.clearFadeOutTimer}
+          >
+            {this.labellingStateFragment()}
+          </div>
+        </>
+      </LabellingTransition>
+    );
+  }
+
+  labellingStateFragment = () => {
+    const {
+      skipAddLabelButton,
+      editLocation,
+      description,
+      locationLabel,
+    } = this.state;
 
     if (!skipAddLabelButton) {
       return (
-        <button
-          type="button"
-          className="addLabelButton"
-          onClick={showLabelling}
-        >
-          {location ? 'Edit' : 'Add'} Label
-        </button>
+        <>
+          <button
+            type="button"
+            className="addLabelButton"
+            onClick={this.showLabelling}
+          >
+            {this.state.location ? 'Edit' : 'Add'} Label
+          </button>
+        </>
       );
     } else {
       if (editLocation) {
         return (
           <SelectTree
-            items={OHIFLabellingData}
+            items={this.currentItems}
             columns={1}
-            onSelected={selectTreeSelectCallback}
+            onSelected={this.selectTreeSelectCalback}
             selectTreeFirstTitle="Assign Label"
+            onComponentChange={this.repositionComponent}
           />
         );
       } else {
         return (
           <>
-            <div className="checkIconWrapper" onClick={fadeOutAndLeaveFast}>
+            <div
+              className="checkIconWrapper"
+              onClick={this.fadeOutAndLeaveFast}
+            >
               <Icon name="check" className="checkIcon" />
             </div>
             <div className="locationDescriptionWrapper">
@@ -167,10 +149,10 @@ const LabellingFlow = ({
               <div className="description">
                 <input
                   id="descriptionInput"
-                  ref={descriptionInput}
+                  ref={this.descriptionInput}
                   defaultValue={description || ''}
                   autoComplete="off"
-                  onKeyPress={handleKeyPress}
+                  onKeyPress={this.handleKeyPress}
                 />
               </div>
             </div>
@@ -178,14 +160,14 @@ const LabellingFlow = ({
               <button
                 type="button"
                 className="commonButton left"
-                onClick={relabel}
+                onClick={this.relabel}
               >
                 Relabel
               </button>
               <button
                 type="button"
                 className="commonButton right"
-                onClick={setDescriptionUpdateMode}
+                onClick={this.setDescriptionUpdateMode}
               >
                 {description ? 'Edit ' : 'Add '}
                 Description
@@ -195,14 +177,14 @@ const LabellingFlow = ({
               <button
                 type="button"
                 className="commonButton left"
-                onClick={descriptionCancel}
+                onClick={this.descriptionCancel}
               >
                 Cancel
               </button>
               <button
                 type="button"
                 className="commonButton right"
-                onClick={descriptionSave}
+                onClick={this.descriptionSave}
               >
                 Save
               </button>
@@ -213,51 +195,130 @@ const LabellingFlow = ({
     }
   };
 
-  if (editDescriptionOnDialog) {
-    return (
-      <EditDescriptionDialog
-        onCancel={labellingDoneCallback}
-        onUpdate={descriptionDialogUpdate}
-        measurementData={state.measurementData}
-      />
-    );
-  }
+  relabel = event => {
+    const viewportTopPosition = this.mainElement.current.offsetParent.offsetTop;
+    const componentStyle = {
+      top: event.nativeEvent.y - viewportTopPosition - 55,
+      left: event.nativeEvent.x,
+    };
+    this.setState({
+      editLocation: true,
+      componentStyle,
+    });
+  };
 
-  return (
-    <LabellingTransition
-      displayComponent={showComponent}
-      onTransitionExit={labellingDoneCallback}
-    >
-      <>
-        <div
-          className={`labellingComponent ${state.editDescription &&
-            'editDescription'}`}
-          onMouseLeave={fadeOutAndLeave}
-          onMouseEnter={clearFadeOutTimer}
-        >
-          {labellingStateFragment()}
-        </div>
-      </>
-    </LabellingTransition>
-  );
-};
+  setDescriptionUpdateMode = () => {
+    this.descriptionInput.current.focus();
 
-LabellingFlow.propTypes = {
-  measurementData: PropTypes.object.isRequired,
-  labellingDoneCallback: PropTypes.func.isRequired,
-  updateLabelling: PropTypes.func.isRequired,
-  initialTopDistance: PropTypes.number,
-  skipAddLabelButton: PropTypes.bool,
-  editLocation: PropTypes.bool,
-  editDescription: PropTypes.bool,
-  editDescriptionOnDialog: PropTypes.bool,
-};
+    this.setState({
+      editDescription: true,
+    });
+  };
 
-LabellingFlow.defaultProps = {
-  skipAddLabelButton: false,
-  editLocation: false,
-  editDescription: false,
-  editDescriptionOnDialog: false,
-};
+  descriptionCancel = () => {
+    const { description = '' } = cloneDeep(this.state);
+    this.descriptionInput.current.value = description;
 
-export default LabellingFlow;
+    this.setState({
+      editDescription: false,
+    });
+  };
+
+  handleKeyPress = e => {
+    if (e.key === 'Enter') {
+      this.descriptionSave();
+    }
+  };
+
+  descriptionSave = () => {
+    const description = this.descriptionInput.current.value;
+    this.props.updateLabelling({ description });
+
+    this.setState({
+      description,
+      editDescription: false,
+    });
+  };
+
+  selectTreeSelectCalback = (event, itemSelected) => {
+    const location = itemSelected.value;
+    this.props.updateLabelling({ location });
+
+    const viewportTopPosition = this.mainElement.current.offsetParent.offsetTop;
+    const componentStyle = {
+      top: event.nativeEvent.y - viewportTopPosition - 25,
+      left: event.nativeEvent.x,
+    };
+
+    this.setState({
+      editLocation: false,
+      confirmationState: true,
+      location: itemSelected.value,
+      locationLabel: itemSelected.label,
+      componentStyle,
+    });
+
+    if (this.isTouchScreen) {
+      this.setTimeout = setTimeout(() => {
+        this.setState({
+          displayComponent: false,
+        });
+      }, 2000);
+    }
+  };
+
+  showLabelling = () => {
+    this.setState({
+      skipAddLabelButton: true,
+      editLocation: false,
+    });
+  };
+
+  fadeOutAndLeave = () => {
+    // Wait for 1 sec to dismiss the labelling component
+    this.fadeOutTimer = setTimeout(() => {
+      this.setState({
+        displayComponent: false,
+      });
+    }, 1000);
+  };
+
+  fadeOutAndLeaveFast = () => {
+    this.setState({
+      displayComponent: false,
+    });
+  };
+
+  clearFadeOutTimer = () => {
+    if (!this.fadeOutTimer) {
+      return;
+    }
+
+    clearTimeout(this.fadeOutTimer);
+  };
+
+  calculateTopDistance = () => {
+    const height = window.innerHeight - window.innerHeight * 0.3;
+    let top = this.state.componentStyle.top - height / 2 + 55;
+    if (top < 0) {
+      top = 0;
+    } else {
+      if (top + height > window.innerHeight) {
+        top -= top + height - window.innerHeight;
+      }
+    }
+    return top;
+  };
+
+  repositionComponent = () => {
+    // SetTimeout for the css animation to end.
+    setTimeout(() => {
+      bounding(this.mainElement);
+      if (this.state.editLocation) {
+        this.mainElement.current.style.maxHeight = '70vh';
+        const top = this.calculateTopDistance();
+        this.mainElement.current.style.top = `${top}px`;
+      }
+    }, 200);
+  };
+}

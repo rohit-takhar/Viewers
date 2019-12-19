@@ -3,22 +3,11 @@ import './StudyList.styl';
 import React from 'react';
 import classNames from 'classnames';
 import TableSearchFilter from './TableSearchFilter.js';
+import useMedia from '../../hooks/useMedia.js';
 import PropTypes from 'prop-types';
 import { StudyListLoadingText } from './StudyListLoadingText.js';
-import { useTranslation } from 'react-i18next';
+import { withTranslation } from '../../utils/LanguageProvider';
 
-const getContentFromUseMediaValue = (
-  displaySize,
-  contentArrayMap,
-  defaultContent
-) => {
-  const content =
-    displaySize in contentArrayMap
-      ? contentArrayMap[displaySize]
-      : defaultContent;
-
-  return content;
-};
 /**
  *
  *
@@ -35,10 +24,10 @@ function StudyList(props) {
     filterValues,
     onFilterChange: handleFilterChange,
     onSelectItem: handleSelectItem,
+    t,
+    //
     studyListDateFilterNumDays,
-    displaySize,
   } = props;
-  const { t, ready: translationsAreReady } = useTranslation('StudyList');
 
   const largeTableMeta = [
     {
@@ -81,13 +70,13 @@ function StudyList(props) {
 
   const mediumTableMeta = [
     {
-      displayText: `${t('PatientName')} / ${t('MRN')}`,
+      displayText: 'Patient / MRN',
       fieldName: 'patientNameOrId',
       inputType: 'text',
       size: 250,
     },
     {
-      displayText: t('Description'),
+      displayText: 'Description',
       fieldName: 'accessionOrModalityOrDescription',
       inputType: 'text',
       size: 350,
@@ -102,16 +91,16 @@ function StudyList(props) {
 
   const smallTableMeta = [
     {
-      displayText: t('Search'),
+      displayText: 'Search',
       fieldName: 'allFields',
       inputType: 'text',
       size: 100,
     },
   ];
 
-  const tableMeta = getContentFromUseMediaValue(
-    displaySize,
-    { large: largeTableMeta, medium: mediumTableMeta, small: smallTableMeta },
+  const tableMeta = useMedia(
+    ['(min-width: 1750px)', '(min-width: 1000px)', '(min-width: 768px)'],
+    [largeTableMeta, mediumTableMeta, smallTableMeta],
     smallTableMeta
   );
 
@@ -119,7 +108,7 @@ function StudyList(props) {
     .map(field => field.size)
     .reduce((prev, next) => prev + next);
 
-  return translationsAreReady ? (
+  return (
     <table className="table table--striped table--hoverable">
       <colgroup>
         {tableMeta.map((field, i) => {
@@ -187,12 +176,12 @@ function StudyList(props) {
               studyDate={study.studyDate}
               studyDescription={study.studyDescription || ''}
               studyInstanceUid={study.studyInstanceUid}
-              displaySize={displaySize}
+              t={t}
             />
           ))}
       </tbody>
     </table>
-  ) : null;
+  );
 }
 
 StudyList.propTypes = {
@@ -217,12 +206,10 @@ StudyList.propTypes = {
     patientNameOrId: PropTypes.string.isRequired,
     accessionOrModalityOrDescription: PropTypes.string.isRequired,
     allFields: PropTypes.string.isRequired,
-    studyDateTo: PropTypes.any,
-    studyDateFrom: PropTypes.any,
   }).isRequired,
   onFilterChange: PropTypes.func.isRequired,
+  //
   studyListDateFilterNumDays: PropTypes.number,
-  displaySize: PropTypes.string,
 };
 
 StudyList.defaultProps = {};
@@ -238,10 +225,8 @@ function TableRow(props) {
     studyDescription,
     studyInstanceUid,
     onClick: handleClick,
-    displaySize,
+    t,
   } = props;
-
-  const { t } = useTranslation('StudyList');
 
   const largeRowTemplate = (
     <tr
@@ -377,13 +362,9 @@ function TableRow(props) {
     </tr>
   );
 
-  const rowTemplate = getContentFromUseMediaValue(
-    displaySize,
-    {
-      large: largeRowTemplate,
-      medium: mediumRowTemplate,
-      small: smallRowTemplate,
-    },
+  const rowTemplate = useMedia(
+    ['(min-width: 1750px)', '(min-width: 1000px)', '(min-width: 768px)'],
+    [largeRowTemplate, mediumRowTemplate, smallRowTemplate],
     smallRowTemplate
   );
 
@@ -399,11 +380,11 @@ TableRow.propTypes = {
   studyDate: PropTypes.string.isRequired,
   studyDescription: PropTypes.string.isRequired,
   studyInstanceUid: PropTypes.string.isRequired,
-  displaySize: PropTypes.string,
 };
 
 TableRow.defaultProps = {
   isHighlighted: false,
 };
 
-export { StudyList };
+const connectedComponent = withTranslation('StudyList')(StudyList);
+export { connectedComponent as StudyList };

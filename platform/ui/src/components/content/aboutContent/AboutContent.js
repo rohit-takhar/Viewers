@@ -58,7 +58,7 @@ const AboutContent = () => {
   );
 
   return (
-    <div className="AboutContent" data-cy="about-modal">
+    <div data-cy="about-modal">
       <div className="btn-group">
         <a
           className="btn btn-default"

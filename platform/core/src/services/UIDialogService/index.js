@@ -1,5 +1,11 @@
 /**
- * A UI Element Position
+ * A UI Element
+ *
+ * @typedef {ReactElement|HTMLElement} DialogContent
+ */
+
+/**
+ * A UI Position
  *
  * @typedef {Object} ElementPosition
  * @property {number} top -
@@ -12,65 +18,64 @@
  * UI Dialog
  *
  * @typedef {Object} DialogProps
- * @property {string} id The dialog id.
- * @property {ReactElement|HTMLElement} content The dialog content.
- * @property {Object} contentProps The dialog content props.
- * @property {boolean} [isDraggable=true] Controls if dialog content is draggable or not.
- * @property {boolean} [showOverlay=false] Controls dialog overlay.
- * @property {boolean} [centralize=false] Center the dialog on the screen.
- * @property {boolean} [preservePosition=true] Use last position instead of default.
- * @property {ElementPosition} defaultPosition Specifies the `x` and `y` that the dragged item should start at.
- * @property {Function} onStart Called when dragging starts. If `false` is returned any handler, the action will cancel.
- * @property {Function} onStop Called when dragging stops.
- * @property {Function} onDrag Called while dragging.
+ * @property {string} id -
+ * @property {DialogContent} content -
+ * @property {boolean} isDraggable -
+ * @property {ElementPosition} defaultPosition -
+ * @property {ElementPosition} position -
+ * @property {Function} onSubmit -
+ * @property {Function} onClose -
+ * @property {Function} onStart -
+ * @property {Function} onStop -
+ * @property {Function} onDrag -
  */
 
-const name = 'UIDialogService';
-
-const publicAPI = {
-  name,
-  dismiss: _dismiss,
-  dismissAll: _dismissAll,
-  create: _create,
+const uiDialogServicePublicAPI = {
+  name: 'UIDialogService',
+  dismiss,
+  dismissAll,
+  create,
   setServiceImplementation,
 };
 
-const serviceImplementation = {
+const uiDialogServiceImplementation = {
   _dismiss: () => console.warn('dismiss() NOT IMPLEMENTED'),
   _dismissAll: () => console.warn('dismissAll() NOT IMPLEMENTED'),
   _create: () => console.warn('create() NOT IMPLEMENTED'),
 };
 
+function createUIDialogService() {
+  return uiDialogServicePublicAPI;
+}
+
 /**
  * Show a new UI dialog;
  *
- * @param {DialogProps} props { id, content, contentProps, onStart, onDrag, onStop, centralize, isDraggable, showOverlay, preservePosition, defaultPosition }
+ * @param {DialogProps} props { id, content, onSubmit, onClose, onStart, onDrag, onStop, isDraggable, defaultPosition, position }
  */
-function _create({
+function create({
   id,
   content,
-  contentProps,
+  onSubmit,
+  onClose,
   onStart,
   onDrag,
   onStop,
-  centralize = false,
-  preservePosition = true,
-  isDraggable = true,
-  showOverlay = false,
+  isDraggable,
   defaultPosition,
+  position,
 }) {
-  return serviceImplementation._create({
+  return uiDialogServiceImplementation._create({
     id,
     content,
-    contentProps,
+    onSubmit,
+    onClose,
     onStart,
     onDrag,
     onStop,
-    centralize,
-    preservePosition,
     isDraggable,
-    showOverlay,
     defaultPosition,
+    position,
   });
 }
 
@@ -79,8 +84,8 @@ function _create({
  *
  * @returns void
  */
-function _dismissAll() {
-  return serviceImplementation._dismissAll();
+function dismissAll() {
+  return uiDialogServiceImplementation._dismissAll();
 }
 
 /**
@@ -88,8 +93,8 @@ function _dismissAll() {
  *
  * @returns void
  */
-function _dismiss({ id }) {
-  return serviceImplementation._dismiss({ id });
+function dismiss({ id }) {
+  return uiDialogServiceImplementation._dismiss({ id });
 }
 
 /**
@@ -107,19 +112,14 @@ function setServiceImplementation({
   create: createImplementation,
 }) {
   if (dismissImplementation) {
-    serviceImplementation._dismiss = dismissImplementation;
+    uiDialogServiceImplementation._dismiss = dismissImplementation;
   }
   if (dismissAllImplementation) {
-    serviceImplementation._dismissAll = dismissAllImplementation;
+    uiDialogServiceImplementation._dismissAll = dismissAllImplementation;
   }
   if (createImplementation) {
-    serviceImplementation._create = createImplementation;
+    uiDialogServiceImplementation._create = createImplementation;
   }
 }
 
-export default {
-  name,
-  create: ({ configuration = {} }) => {
-    return publicAPI;
-  },
-};
+export default createUIDialogService;

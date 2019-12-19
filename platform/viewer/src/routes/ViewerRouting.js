@@ -19,16 +19,21 @@ const getSeriesInstanceUIDs = (seriesInstanceUids, routeLocation) => {
 };
 
 function ViewerRouting({ match: routeMatch, location: routeLocation }) {
+  OHIF.log.info(routeLocation);
+
+  OHIF.log.info(routeMatch);
   const {
     project,
     location,
     dataset,
     dicomStore,
-    studyInstanceUids,
     seriesInstanceUids,
   } = routeMatch.params;
+  var url_params = routeLocation.search;
+  url_params = url_params.split("&")[0];
+  const studyInstanceUids = url_params.substr(11, url_params.length);
   const server = useServer({ project, location, dataset, dicomStore });
-
+  OHIF.log.info(studyInstanceUids);
   const studyUids = UrlUtil.paramString.parseParam(studyInstanceUids);
   const seriesUids = getSeriesInstanceUIDs(seriesInstanceUids, routeLocation);
 

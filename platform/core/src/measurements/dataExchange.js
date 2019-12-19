@@ -7,6 +7,9 @@ export const retrieveMeasurements = (patientId, timepointIds) => {
 
 export const storeMeasurements = (measurementData, timepointIds) => {
   log.error('storeMeasurements');
+  log.info("Hereeeeeee");
+  const studyInstanceUid = measurementData[Object.keys(measurementData)[0]][0].studyInstanceUid;
+  log.info(studyInstanceUid);
   return Promise.resolve();
 };
 

@@ -94,20 +94,18 @@ describe('HotkeysManager', () => {
       expect(firstCallArgs).toEqual(hotkeyDefinitions[0]);
       expect(secondCallArgs).toEqual(hotkeyDefinitions[1]);
     });
-    it('does not set this.hotkeyDefaults when calling setHotKeys', () => {
+    it('does not set this.hotkeyDefaults by default', () => {
       const hotkeyDefinitions = [{ commandName: 'dance', keys: '+' }];
 
       hotkeysManager.setHotkeys(hotkeyDefinitions);
 
       expect(hotkeysManager.hotkeyDefaults).toEqual([]);
     });
-  });
-
-  describe('setDefaultHotKeys()', () => {
-    it('it sets default hotkeys', () => {
+    it('sets this.hotkeyDefaults when isDefaultDefinitions is true', () => {
       const hotkeyDefinitions = [{ commandName: 'dance', keys: '+' }];
+      const isDefaultDefinitions = true;
 
-      hotkeysManager.setDefaultHotKeys(hotkeyDefinitions);
+      hotkeysManager.setHotkeys(hotkeyDefinitions, isDefaultDefinitions);
 
       expect(hotkeysManager.hotkeyDefaults).toEqual(hotkeyDefinitions);
     });

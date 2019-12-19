@@ -1,7 +1,8 @@
 import './MeasurementTable.styl';
-
 import React, { Component } from 'react';
-import { withTranslation } from '../../contextProviders';
+//import { Modal } from 'react-bootstrap';
+
+import { withTranslation } from '../../utils/LanguageProvider';
 
 import { Icon } from './../../elements/Icon';
 import { MeasurementTableItem } from './MeasurementTableItem.js';
@@ -10,6 +11,12 @@ import PropTypes from 'prop-types';
 import { ScrollableArea } from './../../ScrollableArea/ScrollableArea.js';
 import { TableList } from './../tableList';
 import { Tooltip } from './../tooltip';
+import { withSnackbar } from './../../utils/SnackbarProvider';
+import { log } from '@ohif/core';
+import OHIF from '@ohif/core';
+import { TableListItemEditable } from './../recordData/TableListItemEditable';
+import { TableData } from '../tabledata/TableData';
+const { MeasurementApi } = OHIF.measurements;
 
 class MeasurementTable extends Component {
   static propTypes = {
@@ -22,9 +29,10 @@ class MeasurementTable extends Component {
     onDeleteClick: PropTypes.func,
     onEditDescriptionClick: PropTypes.func,
     selectedMeasurementNumber: PropTypes.number,
+    overwallWarnings: PropTypes.object,
     t: PropTypes.func,
     saveFunction: PropTypes.func,
-    onSaveComplete: PropTypes.func,
+    snackbarContext: PropTypes.object,
   };
 
   static defaultProps = {
@@ -36,6 +44,10 @@ class MeasurementTable extends Component {
 
   state = {
     selectedKey: null,
+    vertebraTableData: JSON.parse(
+      JSON.stringify(MeasurementApi.vertebraTableData)
+    ),
+    discTableData: JSON.parse(JSON.stringify(MeasurementApi.discTableData)),
   };
 
   render() {
@@ -79,36 +91,46 @@ class MeasurementTable extends Component {
         </ScrollableArea>
         <div className="measurementTableFooter">
           {saveFunction && (
-            <button onClick={this.saveFunction} className="saveBtn">
-              <Icon name="save" width="14px" height="14px" />
-              Save measurements
-            </button>
-          )}
+            <React.Fragment>
+              {MeasurementApi.show === 'block'?(<div className="ai_results">
+                <a href={MeasurementApi.url_} className="btn-context-flow" style={{"display": MeasurementApi.show}}>Context Flow</a></div>):(MeasurementApi.show_lung === 'block'?(
+                <TableListItemEditable
+                  onRejectClick={() => MeasurementApi.onRecordDataRejected()}
+                  onSaveClick={this.saveFunction}
+                  textAreaPrefilledValue={MeasurementApi.getUpdatedRecordData()}
+                />):(MeasurementApi.getUpdatedRecordData() !== null ? (
+                <TableListItemEditable
+                  onRejectClick={() => MeasurementApi.onRecordDataRejected()}
+                  onSaveClick={this.saveFunction}
+                  textAreaPrefilledValue={MeasurementApi.getUpdatedRecordData()}
+                />
+              ) : (
+                <TableData onSaveClickMT={this.saveFunction} buttonName="View AI Results"/>
+              )))}
+
+            </React.Fragment>          )}
+          {MeasurementApi.show_lung === 'block'?
+            (<div className="ai_results">
+            <a href={MeasurementApi.url_} className="btn-context-flow" style={{"display": MeasurementApi.show_lung}}>Lung Analysis</a></div>):''}
         </div>
       </div>
     );
   }
-
-  saveFunction = async event => {
-    const { saveFunction, onSaveComplete } = this.props;
+  saveFunction = recordData => async event => {
+    const { saveFunction, snackbarContext } = this.props;
     if (saveFunction) {
       try {
-        const result = await saveFunction();
-        if (onSaveComplete) {
-          onSaveComplete({
-            title: 'STOW SR',
-            message: result.message,
-            type: 'success',
-          });
-        }
+        await saveFunction(recordData);
+        snackbarContext.show({
+          title: 'STOW SR',
+          message: 'Measurements were saved with success',
+        });
       } catch (error) {
-        if (onSaveComplete) {
-          onSaveComplete({
-            title: 'STOW SR',
-            message: error.message,
-            type: 'error',
-          });
-        }
+        log.error(`Error during store attempt: ${error}`);
+        snackbarContext.show({
+          title: 'STOW SR',
+          message: 'Error while saving the measurements',
+        });
       }
     }
   };
@@ -191,7 +213,7 @@ class MeasurementTable extends Component {
   };
 
   getWarningContent = () => {
-    const { warningList = '' } = this.props.overallWarnings;
+    const { warningList = '' } = this.props.overwallWarnings;
 
     if (Array.isArray(warningList)) {
       const listedWarnings = warningList.map((warn, index) => {
@@ -205,8 +227,8 @@ class MeasurementTable extends Component {
   };
 }
 
-const connectedComponent = withTranslation(['MeasurementTable', 'Common'])(
-  MeasurementTable
+const connectedComponent = withSnackbar(
+  withTranslation(['MeasurementTable', 'Common'])(MeasurementTable)
 );
 export { connectedComponent as MeasurementTable };
 export default connectedComponent;

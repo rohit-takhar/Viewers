@@ -2,7 +2,7 @@ describe('OHIF Cornerstone Toolbar', () => {
   before(() => {
     cy.openStudy('MISTER^MR');
     cy.waitDicomImage();
-    cy.expectMinimumThumbnails(5);
+    cy.expectMinimumThumbnails(3);
   });
 
   beforeEach(() => {
@@ -112,14 +112,25 @@ describe('OHIF Cornerstone Toolbar', () => {
         cy.wrap($panBtn).should('have.class', 'active');
       });
 
+    //Get image position from cornerstone and check if y axis was modified
+    let cornerstone;
+    let currentPan;
+
+    cy.window()
+      .its('cornerstone')
+      .then(c => {
+        cornerstone = c;
+        currentPan = () =>
+          cornerstone.getEnabledElements()[0].viewport.translation;
+      });
+
     cy.get('@viewport')
       .trigger('mousedown', 'center', { which: 1 })
       .trigger('mousemove', 'bottom', { which: 1 })
-      .trigger('mouseup', 'bottom');
-
-    // Visual comparison
-    cy.screenshot('Pan tool moved the image inside the viewport');
-    cy.percyCanvasSnapshot('Pan tool moved the image inside the viewport');
+      .trigger('mouseup', 'bottom')
+      .then(() => {
+        expect(currentPan().y > 0).to.eq(true);
+      });
   });
 
   it('checks if Length annotation can be added on viewport and on measurements panel', () => {
@@ -301,18 +312,18 @@ describe('OHIF Cornerstone Toolbar', () => {
           .find('td')
           .its('length')
           .should('be.eq', 9);
-        cy.get('@layoutBtn').click();
       });
 
     //verify if layout has changed to 2 viewports
-    cy.setLayout(1, 2);
+    cy.get('tbody > :nth-child(1) > :nth-child(2)').click();
     cy.get('.viewport-container').then($viewport => {
       cy.wrap($viewport)
         .its('length')
         .should('be.eq', 2);
     });
 
-    cy.setLayout(2, 1);
+    cy.get('@layoutBtn').click();
+    cy.get('tbody > :nth-child(2) > :nth-child(1)').click();
     cy.get('.viewport-container').then($viewport => {
       cy.wrap($viewport)
         .its('length')
@@ -320,7 +331,8 @@ describe('OHIF Cornerstone Toolbar', () => {
     });
 
     //verify if layout has changed to 3 viewports
-    cy.setLayout(1, 3);
+    cy.get('@layoutBtn').click();
+    cy.get('tbody > :nth-child(1) > :nth-child(3)').click();
     cy.get('.viewport-container').then($viewport => {
       cy.wait(1000);
       cy.wrap($viewport)
@@ -328,7 +340,8 @@ describe('OHIF Cornerstone Toolbar', () => {
         .should('be.eq', 3);
     });
 
-    cy.setLayout(3, 1);
+    cy.get('@layoutBtn').click();
+    cy.get('tbody > :nth-child(3) > :nth-child(1)').click();
     cy.get('.viewport-container').then($viewport => {
       cy.wrap($viewport)
         .its('length')
@@ -336,7 +349,8 @@ describe('OHIF Cornerstone Toolbar', () => {
     });
 
     //verify if layout has changed to 4 viewports
-    cy.setLayout(2, 2);
+    cy.get('@layoutBtn').click();
+    cy.get('tbody > :nth-child(2) > :nth-child(2)').click();
     cy.get('.viewport-container').then($viewport => {
       cy.wrap($viewport)
         .its('length')
@@ -344,14 +358,16 @@ describe('OHIF Cornerstone Toolbar', () => {
     });
 
     //verify if layout has changed to 6 viewports
-    cy.setLayout(2, 3);
+    cy.get('@layoutBtn').click();
+    cy.get('tbody > :nth-child(2) > :nth-child(3)').click();
     cy.get('.viewport-container').then($viewport => {
       cy.wrap($viewport)
         .its('length')
         .should('be.eq', 6);
     });
 
-    cy.setLayout(3, 2);
+    cy.get('@layoutBtn').click();
+    cy.get('tbody > :nth-child(3) > :nth-child(2)').click();
     cy.get('.viewport-container').then($viewport => {
       cy.wrap($viewport)
         .its('length')
@@ -359,7 +375,8 @@ describe('OHIF Cornerstone Toolbar', () => {
     });
 
     //verify if layout has changed to 9 viewports
-    cy.setLayout(3, 3);
+    cy.get('@layoutBtn').click();
+    cy.get('tbody > :nth-child(3) > :nth-child(3)').click();
     cy.get('.viewport-container').then($viewport => {
       cy.wrap($viewport)
         .its('length')
@@ -367,7 +384,8 @@ describe('OHIF Cornerstone Toolbar', () => {
     });
 
     //verify if layout has changed to 1 viewport
-    cy.setLayout(1, 1);
+    cy.get('@layoutBtn').click();
+    cy.get('tbody > :nth-child(1) > :nth-child(1)').click();
     cy.get('.viewport-container').then($viewport => {
       cy.wrap($viewport)
         .its('length')
@@ -407,9 +425,7 @@ describe('OHIF Cornerstone Toolbar', () => {
       .as('toolbarOverlay')
       .should('be.visible');
     //Click on Clear button
-    cy.get('.tooltip-inner')
-      .contains('Clear')
-      .click();
+    cy.get('.tooltip-inner > :nth-child(10)').click();
 
     //Verify if measurements were removed from the measurements panel
     cy.get('.measurementItem').should('not.exist');
@@ -441,15 +457,8 @@ describe('OHIF Cornerstone Toolbar', () => {
 
     //Click More button
     cy.get('@moreBtn').click();
-    //Verify if overlay is displayed
-    cy.get('.tooltip-toolbar-overlay')
-      .should('be.visible')
-      .then(() => {
-        //Click Eraser button
-        cy.get('.tooltip-inner')
-          .contains('Eraser')
-          .click({ force: true });
-      });
+    //Click Eraser button
+    cy.get('.tooltip-inner > :nth-child(12)').click();
 
     //Erase measurement #1 and Verify if it was removed from the measurements panel
     const [x1, y1] = [150, 100];
@@ -462,71 +471,5 @@ describe('OHIF Cornerstone Toolbar', () => {
     const [x2, y2] = [180, 390];
     cy.get('@viewport').click(x2, y2, { force: true });
     cy.get('.measurementItem').should('not.exist');
-  });
-
-  it('check if Invert tool will change the colors of the image in the viewport', () => {
-    // Click on More button
-    cy.get('@moreBtn').click();
-    // Verify if overlay is displayed
-    cy.get('.tooltip-toolbar-overlay').should('be.visible');
-
-    // Click on Invert button
-    cy.get('.tooltip-inner')
-      .contains('Invert')
-      .click();
-
-    // Visual comparison
-    cy.screenshot('Invert tool - Should Invert Canvas');
-    cy.percyCanvasSnapshot('Invert tool - Should Invert Canvas');
-  });
-
-  it('check if Rotate tool will change the image orientation in the viewport', () => {
-    //Click on More button
-    cy.get('@moreBtn').click();
-    //Verify if overlay is displayed
-    cy.get('.tooltip-toolbar-overlay')
-      .should('be.visible')
-      .then(() => {
-        //Click on Rotate button
-        cy.get('.tooltip-inner')
-          .contains('Rotate')
-          .click({ force: true });
-      });
-
-    // Visual comparison
-    cy.screenshot('Rotate tool - Should Rotate Image to Right');
-    cy.percyCanvasSnapshot('Rotate tool - Should Rotate Image to Right');
-  });
-
-  it('check if Flip H tool will flip the image horizontally in the viewport', () => {
-    //Click on More button
-    cy.get('@moreBtn').click();
-    //Verify if overlay is displayed
-    cy.get('.tooltip-toolbar-overlay').should('be.visible');
-
-    //Click on Flip H button
-    cy.get('.tooltip-inner')
-      .contains('Flip H')
-      .click();
-
-    // Visual comparison
-    cy.screenshot('Flip H tool - Should Flip Image on Y axis');
-    cy.percyCanvasSnapshot('Flip H tool - Should Flip Image on Y axis');
-  });
-
-  it('check if Flip V tool will flip the image vertically in the viewport', () => {
-    //Click on More button
-    cy.get('@moreBtn').click();
-    //Verify if overlay is displayed
-    cy.get('.tooltip-toolbar-overlay').should('be.visible');
-
-    //Click on Flip V button
-    cy.get('.tooltip-inner')
-      .contains('Flip V')
-      .click();
-
-    // Visual comparison
-    cy.screenshot('Flip V tool - Should Flip Image on X axis');
-    cy.percyCanvasSnapshot('Flip V tool - Should Flip Image on X axis');
   });
 });

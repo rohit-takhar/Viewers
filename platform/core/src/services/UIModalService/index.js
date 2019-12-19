@@ -1,53 +1,53 @@
 /**
+ * A UI Element
+ *
+ * @typedef {ReactElement|HTMLElement} Modal
+ */
+
+/**
  * UI Modal
  *
  * @typedef {Object} ModalProps
- * @property {ReactElement|HTMLElement} [content=null] Modal content.
- * @property {Object} [contentProps=null] Modal content props.
- * @property {boolean} [shouldCloseOnEsc=false] Modal is dismissible via the esc key.
- * @property {boolean} [isOpen=true] Make the Modal visible or hidden.
- * @property {boolean} [closeButton=true] Should the modal body render the close button.
- * @property {string} [title=null] Should the modal render the title independently of the body content.
- * @property {string} [customClassName=null] The custom class to style the modal.
+ * @property {boolean} [shouldCloseOnEsc=false] -
+ * @property {boolean} [isOpen=true] -
+ * @property {boolean} [closeButton=true] -
+ * @property {string} [title=null] - 'Modal Title'
+ * @property {string} [customClassName=null] - '.ModalClass'
  */
 
-const name = 'UIModalService';
-
-const publicAPI = {
-  name,
-  hide: _hide,
-  show: _show,
+const uiModalServicePublicAPI = {
+  name: 'UIModalService',
+  hide,
+  show,
   setServiceImplementation,
 };
 
-const serviceImplementation = {
+const uiModalServiceImplementation = {
   _hide: () => console.warn('hide() NOT IMPLEMENTED'),
   _show: () => console.warn('show() NOT IMPLEMENTED'),
 };
 
+function createUIModalService() {
+  return uiModalServicePublicAPI;
+}
+
 /**
  * Show a new UI modal;
  *
- * @param {ModalProps} props { content, contentProps, shouldCloseOnEsc, isOpen, closeButton, title, customClassName }
+ * @param {Modal} component React component
+ * @param {ModalProps} props { shouldCloseOnEsc, isOpen, closeButton, title, customClassName }
  */
-function _show({
-  content = null,
-  contentProps = null,
-  shouldCloseOnEsc = false,
-  isOpen = true,
-  closeButton = true,
-  title = null,
-  customClassName = null,
-}) {
-  return serviceImplementation._show({
-    content,
-    contentProps,
-    shouldCloseOnEsc,
-    isOpen,
-    closeButton,
-    title,
-    customClassName,
-  });
+function show(
+  component,
+  props = {
+    shouldCloseOnEsc: false,
+    isOpen: true,
+    closeButton: true,
+    title: null,
+    customClassName: null,
+  }
+) {
+  return uiModalServiceImplementation._show(component, props);
 }
 
 /**
@@ -55,8 +55,8 @@ function _show({
  *
  * @returns void
  */
-function _hide() {
-  return serviceImplementation._hide();
+function hide() {
+  return uiModalServiceImplementation._hide();
 }
 
 /**
@@ -72,16 +72,11 @@ function setServiceImplementation({
   show: showImplementation,
 }) {
   if (hideImplementation) {
-    serviceImplementation._hide = hideImplementation;
+    uiModalServiceImplementation._hide = hideImplementation;
   }
   if (showImplementation) {
-    serviceImplementation._show = showImplementation;
+    uiModalServiceImplementation._show = showImplementation;
   }
 }
 
-export default {
-  name,
-  create: ({ configuration = {} }) => {
-    return publicAPI;
-  },
-};
+export default createUIModalService;

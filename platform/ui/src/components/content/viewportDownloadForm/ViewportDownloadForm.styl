@@ -3,12 +3,14 @@
 @import '../../../design/styles/common/button.styl'
 
 .ViewportDownloadForm
-  display: flex;
-  flex-direction: column;
+  color: var(--text-secondary-color);
+  filter: drop-shadow(0 0 3px var(--ui-gray-darkest));
+  border: none;
+  border-radius: 8px;
+  width: inherit;
+  padding: 15px;
+  background: transparent;
   z-index: 1080 !important;
-
-  input, select
-    max-height: 30px;
 
   .title
     margin: 0;
@@ -65,7 +67,6 @@
     padding: 10px;
     border-radius: 5px;
     align-self: center;
-    margin-bottom: 20px;
     @media screen and (max-width: 1023px)
       width: 100%;
       justify-content: center;
@@ -89,6 +90,7 @@
 
   .actions
     display: flex;
+    height: 60px;
     flex-wrap: nowrap;
     justify-content: flex-end;
     align-items: center;

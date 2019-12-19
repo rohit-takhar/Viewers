@@ -7,12 +7,10 @@ export default class ServicesManager {
   }
 
   /**
-   * Registers a new service.
    *
    * @param {Object} service
-   * @param {Object} configuration
    */
-  registerService(service, configuration = {}) {
+  registerService(service) {
     if (!service) {
       log.warn(
         'Attempting to register a null/undefined service. Exiting early.'
@@ -20,47 +18,32 @@ export default class ServicesManager {
       return;
     }
 
-    if (!service.name) {
+    let serviceName = service.name;
+
+    if (!serviceName) {
       log.warn(`Service name not set. Exiting early.`);
       return;
     }
 
-    if (this.registeredServiceNames.includes(service.name)) {
+    if (this.registeredServiceNames.includes(serviceName)) {
       log.warn(
-        `Service name ${service.name} has already been registered. Exiting before duplicating services.`
+        `Extension name ${serviceName} has already been registered. Exiting before duplicating services.`
       );
       return;
     }
 
-    if (service.create) {
-      this.services[service.name] = service.create({
-        configuration,
-      });
-    } else {
-      log.warn(`Service create factory function not defined. Exiting early.`);
-      return;
-    }
+    this.services[service.name] = service;
 
-    /* Track service registration */
-    this.registeredServiceNames.push(service.name);
+    // Track service registration
+    this.registeredServiceNames.push(serviceName);
   }
 
   /**
-   * An array of services, or an array of arrays that contains service
-   * configuration pairs.
+   * An array of services.
    *
    * @param {Object[]} services - Array of services
    */
   registerServices(services) {
-    services.forEach(service => {
-      const hasConfiguration = Array.isArray(service);
-
-      if (hasConfiguration) {
-        const [ohifService, configuration] = service;
-        this.registerService(ohifService, configuration);
-      } else {
-        this.registerService(service);
-      }
-    });
+    services.forEach(service => this.registerService(service));
   }
 }

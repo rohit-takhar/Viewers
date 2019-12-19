@@ -2,6 +2,7 @@ import './ViewerMain.css';
 
 import { Component } from 'react';
 import { ConnectedViewportGrid } from './../components/ViewportGrid/index.js';
+import ConnectedToolContextMenu from './ConnectedToolContextMenu.js';
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -152,6 +153,7 @@ class ViewerMain extends Component {
             setViewportData={this.setViewportData}
           >
             {/* Children to add to each viewport that support children */}
+            <ConnectedToolContextMenu />
           </ConnectedViewportGrid>
         )}
       </div>
